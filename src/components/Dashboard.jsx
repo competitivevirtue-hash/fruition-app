@@ -20,6 +20,7 @@ import SplashScreen from './SplashScreen';
 import RecipeModal from './RecipeModal';
 import StatsModal from './StatsModal';
 import ReportsView from './ReportsView';
+import CommunityPulse from './CommunityPulse';
 import { generateSmartRecipe } from '../utils/aiService';
 import { getRelativeTime } from '../utils/fruitUtils';
 import '../App.css'; // Keep utilizing App common styles
@@ -153,6 +154,9 @@ const Dashboard = () => {
                             <SearchBar onFruitSelect={setSelectedFruit} onSparkleClick={handleGenerateRecipe} />
                         </div>
                     </div>
+
+                    <CommunityPulse />
+
                     <DashboardWidgets fruits={fruits} />
 
                     {/* Add Fruit Button (Prominent) */}

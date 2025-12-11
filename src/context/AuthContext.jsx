@@ -204,6 +204,32 @@ export function AuthProvider({ children }) {
         }
     }
 
+    async function updateLastActive() {
+        if (!currentUser) return;
+        const userRef = doc(db, 'users', currentUser.uid);
+        try {
+            await updateDoc(userRef, {
+                lastActive: serverTimestamp()
+            });
+        } catch (error) {
+            console.warn("Error updating presence:", error);
+        }
+    }
+
+    // Presence Heartbeat: Update 'lastActive' every 5 minutes while app is open
+    useEffect(() => {
+        if (!currentUser) return;
+
+        // Initial update
+        updateLastActive();
+
+        const interval = setInterval(() => {
+            updateLastActive();
+        }, 5 * 60 * 1000); // 5 minutes
+
+        return () => clearInterval(interval);
+    }, [currentUser]);
+
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             setCurrentUser(user);

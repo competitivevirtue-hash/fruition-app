@@ -2,6 +2,7 @@ import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import LandingPage from './components/LandingPage';
 import Dashboard from './components/Dashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import PrivacyPolicy from './components/PrivacyPolicy';
 import './App.css';
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
         {/* Redirect /home to /dashboard for now as requested */}
         <Route path="/home" element={<Navigate to="/dashboard" replace />} />
         <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
       </Routes>
     </Router>
   );

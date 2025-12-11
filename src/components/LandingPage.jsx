@@ -90,6 +90,9 @@ const LandingPage = () => {
                         <span>Fruition</span>
                     </div>
                     <p className="copyright">© 2025 Fruition. All rights reserved. Designed for Health & Happiness.</p>
+                    <div className="footer-links" style={{ display: 'flex', gap: '20px', fontSize: '0.85rem' }}>
+                        <button onClick={() => navigate('/privacy')} style={{ background: 'none', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer', textDecoration: 'underline' }}>Privacy Policy</button>
+                    </div>
                 </div>
             </footer>
         </div>
