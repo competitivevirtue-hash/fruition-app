@@ -3,8 +3,6 @@ import { AlertTriangle, Activity } from 'lucide-react';
 import { FRUIT_INTELLIGENCE, COLOR_MAP, BENEFIT_MAP, COLOR_DEFINITIONS } from '../utils/fruitUtils';
 import './DashboardWidgets.css';
 
-
-
 import { db } from '../firebase';
 import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
 import { getRelativeTime } from '../utils/fruitUtils';
@@ -34,6 +32,8 @@ const DashboardWidgets = ({ fruits }) => {
 
         return () => unsubscribe();
     }, []);
+
+    // --- INTELLIGENCE PROCESSING ---
 
     // --- INTELLIGENCE PROCESSING ---
     const intelligence = useMemo(() => {

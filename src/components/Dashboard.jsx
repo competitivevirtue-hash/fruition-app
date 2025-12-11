@@ -20,7 +20,7 @@ import SplashScreen from './SplashScreen';
 import RecipeModal from './RecipeModal';
 import StatsModal from './StatsModal';
 import ReportsView from './ReportsView';
-import CommunityPulse from './CommunityPulse';
+import HouseholdModal from './HouseholdModal';
 import { generateSmartRecipe } from '../utils/aiService';
 import { getRelativeTime } from '../utils/fruitUtils';
 import '../App.css'; // Keep utilizing App common styles
@@ -57,6 +57,9 @@ const Dashboard = () => {
     const [isRecipeModalOpen, setIsRecipeModalOpen] = useState(false);
     const [recipeLoading, setRecipeLoading] = useState(false);
     const [generatedRecipe, setGeneratedRecipe] = useState(null);
+
+    // Household State
+    const [isHouseholdModalOpen, setIsHouseholdModalOpen] = useState(false);
 
     // Stats State
     const [isStatsOpen, setIsStatsOpen] = useState(false);
@@ -153,82 +156,98 @@ const Dashboard = () => {
                         <div style={{ marginTop: '1.5rem', marginBottom: '1rem' }}>
                             <SearchBar onFruitSelect={setSelectedFruit} onSparkleClick={handleGenerateRecipe} />
                         </div>
-                    </div>
 
-                    <CommunityPulse />
+                        <DashboardWidgets fruits={fruits} />
 
-                    <DashboardWidgets fruits={fruits} />
+                        {/* Add Fruit Button (Prominent) */}
+                        {user ? (
+                            <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                                <button
+                                    className="btn btn-primary"
+                                    onClick={() => {
+                                        setAddFruitDate(null);
+                                        setIsAddFruitOpen(true);
+                                    }}
+                                    style={{
+                                        padding: '1rem 2rem',
+                                        fontSize: '1.1rem',
+                                        boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.5rem'
+                                    }}
+                                >
+                                    <Plus size={24} />
+                                    {t('addFruit')}
+                                </button>
 
-                    {/* Add Fruit Button (Prominent) */}
-                    {user ? (
-                        <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-                            <button
-                                className="btn btn-primary"
-                                onClick={() => {
-                                    setAddFruitDate(null);
-                                    setIsAddFruitOpen(true);
-                                }}
-                                style={{
-                                    padding: '1rem 2rem',
-                                    fontSize: '1.1rem',
-                                    boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.5rem'
-                                }}
-                            >
-                                <Plus size={24} />
-                                {t('addFruit')}
-                            </button>
+                                <button
+                                    className="btn"
+                                    onClick={handleGenerateRecipe}
+                                    style={{
+                                        padding: '1rem 2rem',
+                                        fontSize: '1.1rem',
+                                        background: 'linear-gradient(135deg, #F59E0B 0%, #EA580C 100%)',
+                                        color: 'white',
+                                        boxShadow: '0 4px 15px rgba(245, 158, 11, 0.3)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.5rem',
+                                        border: 'none',
+                                        borderRadius: '0.75rem'
+                                    }}
+                                >
+                                    <Sparkles size={24} />
+                                    Smart Chef
+                                </button>
+                            </div>
+                        ) : (
+                            <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+                                <p style={{ color: 'var(--color-text-muted)', marginBottom: '1rem', fontSize: '1.1rem' }}>
+                                    Login to start tracking your fruit intake
+                                </p>
+                                <button
+                                    className="btn btn-primary"
+                                    onClick={() => setIsProfileOpen(true)}
+                                    style={{
+                                        padding: '0.75rem 1.5rem',
+                                        boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+                                    }}
+                                >
+                                    Login / Sign Up
+                                </button>
+                            </div>
+                        )}
 
-                            <button
-                                className="btn"
-                                onClick={handleGenerateRecipe}
-                                style={{
-                                    padding: '1rem 2rem',
-                                    fontSize: '1.1rem',
-                                    background: 'linear-gradient(135deg, #F59E0B 0%, #EA580C 100%)',
-                                    color: 'white',
-                                    boxShadow: '0 4px 15px rgba(245, 158, 11, 0.3)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.5rem',
-                                    border: 'none',
-                                    borderRadius: '0.75rem'
-                                }}
-                            >
-                                <Sparkles size={24} />
-                                Smart Chef
-                            </button>
-                        </div>
-                    ) : (
-                        <div style={{ marginTop: '2rem', textAlign: 'center' }}>
-                            <p style={{ color: 'var(--color-text-muted)', marginBottom: '1rem', fontSize: '1.1rem' }}>
-                                Login to start tracking your fruit intake
-                            </p>
-                            <button
-                                className="btn btn-primary"
-                                onClick={() => setIsProfileOpen(true)}
-                                style={{
-                                    padding: '0.75rem 1.5rem',
-                                    boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
-                                }}
-                            >
-                                Login / Sign Up
-                            </button>
-                        </div>
-                    )}
+                        {expiringFruits.length > 0 && (
+                            <div className="expiring-section" style={{ marginTop: '2rem' }}>
+                                <h3 className="section-title" style={{ fontSize: '1.25rem', marginBottom: '1rem', color: '#FF4D4D', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    ⚠️ Expiring Soon
+                                </h3>
+                                <div className="fruit-grid">
+                                    {expiringFruits.map(fruit => (
+                                        <FruitCard
+                                            key={fruit.id}
+                                            fruit={fruit}
+                                            onDetails={() => setSelectedFruit(fruit)}
+                                            onConsume={(amount) => consumeFruit(fruit.id, amount)}
+                                            onDelete={removeFruit}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
-                    {expiringFruits.length > 0 && (
-                        <div className="expiring-section" style={{ marginTop: '2rem' }}>
-                            <h3 className="section-title" style={{ fontSize: '1.25rem', marginBottom: '1rem', color: '#FF4D4D', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                ⚠️ Expiring Soon
-                            </h3>
+                        <div className="recent-fruits-section" style={{ marginTop: '2rem' }}>
+                            <h3 className="section-title" style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>{t('recentAdditions')}</h3>
                             <div className="fruit-grid">
-                                {expiringFruits.map(fruit => (
+                                {recentFruits.map(fruit => (
                                     <FruitCard
                                         key={fruit.id}
-                                        fruit={fruit}
+                                        fruit={{
+                                            ...fruit,
+                                            subtitle: `Added ${getRelativeTime(fruit.purchaseDate || fruit.createdAt)}`
+                                        }}
                                         onDetails={() => setSelectedFruit(fruit)}
                                         onConsume={(amount) => consumeFruit(fruit.id, amount)}
                                         onDelete={removeFruit}
@@ -236,129 +255,119 @@ const Dashboard = () => {
                                 ))}
                             </div>
                         </div>
-                    )}
-
-                    <div className="recent-fruits-section" style={{ marginTop: '2rem' }}>
-                        <h3 className="section-title" style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>{t('recentAdditions')}</h3>
-                        <div className="fruit-grid">
-                            {recentFruits.map(fruit => (
-                                <FruitCard
-                                    key={fruit.id}
-                                    fruit={{
-                                        ...fruit,
-                                        subtitle: `Added ${getRelativeTime(fruit.purchaseDate || fruit.createdAt)}`
-                                    }}
-                                    onDetails={() => setSelectedFruit(fruit)}
-                                    onConsume={(amount) => consumeFruit(fruit.id, amount)}
-                                    onDelete={removeFruit}
-                                />
-                            ))}
-                        </div>
                     </div>
-                </div>
-            )
+                    )
             }
 
-            {
-                currentView === 'my-fruits' && (
-                    <section className="fruit-section">
-                        <div className="section-header">
-                            <h2 className="section-title">{t('myFruitBasket')}</h2>
-                            {user && (
-                                <button className="btn btn-primary" onClick={() => {
-                                    setAddFruitDate(null);
-                                    setIsAddFruitOpen(true);
-                                }}>
-                                    <Plus size={18} style={{ marginRight: '0.5rem' }} />
-                                    {t('addFruit')}
-                                </button>
-                            )}
-                        </div>
-                        <div className="fruit-grid">
-                            {fruits.map(fruit => (
-                                <FruitCard
-                                    key={fruit.id}
-                                    fruit={fruit}
-                                    onDetails={() => setSelectedFruit(fruit)}
-                                    onConsume={(amount) => consumeFruit(fruit.id, amount)}
-                                    onDelete={removeFruit}
-                                />
-                            ))}
-                        </div>
-                        <FruitBasket fruits={fruits} />
-                    </section>
-                )
-            }
+                    {
+                        currentView === 'my-fruits' && (
+                            <section className="fruit-section">
+                                <div className="section-header">
+                                    <h2 className="section-title">{t('myFruitBasket')}</h2>
+                                    {user && (
+                                        <button className="btn btn-primary" onClick={() => {
+                                            setAddFruitDate(null);
+                                            setIsAddFruitOpen(true);
+                                        }}>
+                                            <Plus size={18} style={{ marginRight: '0.5rem' }} />
+                                            {t('addFruit')}
+                                        </button>
+                                    )}
+                                </div>
+                                <div className="fruit-grid">
+                                    {fruits.map(fruit => (
+                                        <FruitCard
+                                            key={fruit.id}
+                                            fruit={fruit}
+                                            onDetails={() => setSelectedFruit(fruit)}
+                                            onConsume={(amount) => consumeFruit(fruit.id, amount)}
+                                            onDelete={removeFruit}
+                                        />
+                                    ))}
+                                </div>
+                                <FruitBasket fruits={fruits} />
+                            </section>
+                        )
+                    }
 
-            {
-                currentView === 'calendar' && (
-                    <CalendarView onAddFruit={(date) => {
-                        setAddFruitDate(date);
-                        setIsAddFruitOpen(true);
-                    }} />
-                )
-            }
+                    {
+                        currentView === 'calendar' && (
+                            <CalendarView onAddFruit={(date) => {
+                                setAddFruitDate(date);
+                                setIsAddFruitOpen(true);
+                            }} />
+                        )
+                    }
 
-            {
-                currentView === 'fruitcyclopedia' && (
-                    <Fruitcyclopedia onFruitSelect={setSelectedFruit} />
-                )
-            }
+                    {
+                        currentView === 'fruitcyclopedia' && (
+                            <Fruitcyclopedia onFruitSelect={setSelectedFruit} />
+                        )
+                    }
 
-            {
-                currentView === 'reports' && (
-                    <ReportsView />
-                )
-            }
+                    {
+                        currentView === 'reports' && (
+                            <ReportsView />
+                        )
+                    }
 
-            <FruitcyclopediaModal
-                fruit={selectedFruit}
-                onClose={() => setSelectedFruit(null)}
-                onAddToBasket={(name) => {
-                    setPrefillFruitName(name);
-                    setSelectedFruit(null);
-                    setAddFruitDate(null);
-                    setIsAddFruitOpen(true);
-                }}
-            />
+                    <FruitcyclopediaModal
+                        fruit={selectedFruit}
+                        onClose={() => setSelectedFruit(null)}
+                        onAddToBasket={(name) => {
+                            setPrefillFruitName(name);
+                            setSelectedFruit(null);
+                            setAddFruitDate(null);
+                            setIsAddFruitOpen(true);
+                        }}
+                    />
 
-            <SettingsModal
-                isOpen={isSettingsOpen}
-                onClose={() => setIsSettingsOpen(false)}
-                currentTheme={theme}
-                onThemeChange={setTheme}
-                currentLanguage={language}
-                onLanguageChange={setLanguage}
-            />
+                    <SettingsModal
+                        isOpen={isSettingsOpen}
+                        onClose={() => setIsSettingsOpen(false)}
+                        currentTheme={theme}
+                        onThemeChange={setTheme}
+                        currentLanguage={language}
+                        onLanguageChange={setLanguage}
+                    />
 
-            <AddFruitModal
-                isOpen={isAddFruitOpen}
-                onClose={() => {
-                    setIsAddFruitOpen(false);
-                    setPrefillFruitName('');
-                }}
-                initialDate={addFruitDate}
-                initialFruitName={prefillFruitName}
-            />
+                    <AddFruitModal
+                        isOpen={isAddFruitOpen}
+                        onClose={() => {
+                            setIsAddFruitOpen(false);
+                            setPrefillFruitName('');
+                        }}
+                        initialDate={addFruitDate}
+                        initialFruitName={prefillFruitName}
+                    />
 
-            <ProfileModal
-                isOpen={isProfileOpen}
-                onClose={() => setIsProfileOpen(false)}
-            />
+                    <ProfileModal
+                        isOpen={isProfileOpen}
+                        onClose={() => setIsProfileOpen(false)}
+                        onOpenHousehold={() => {
+                            setIsProfileOpen(false);
+                            setIsHouseholdModalOpen(true);
+                        }}
+                    />
 
-            <RecipeModal
-                isOpen={isRecipeModalOpen}
-                onClose={() => setIsRecipeModalOpen(false)}
-                recipe={generatedRecipe}
-                loading={recipeLoading}
-            />
+                    <HouseholdModal
+                        isOpen={isHouseholdModalOpen}
+                        onClose={() => setIsHouseholdModalOpen(false)}
+                    />
 
-            <StatsModal
-                isOpen={isStatsOpen}
-                onClose={() => setIsStatsOpen(false)}
-            />
-        </Layout >
-    );
+                    <RecipeModal
+                        isOpen={isRecipeModalOpen}
+                        onClose={() => setIsRecipeModalOpen(false)}
+                        recipe={generatedRecipe}
+                        loading={recipeLoading}
+                    />
+
+                    <StatsModal
+                        isOpen={isStatsOpen}
+                        onClose={() => setIsStatsOpen(false)}
+                    />
+                </Layout >
+            );
 }
 
-export default Dashboard;
+            export default Dashboard;

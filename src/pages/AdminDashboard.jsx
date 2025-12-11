@@ -41,6 +41,17 @@ const AdminDashboard = () => {
                     totalUsers: snapshot.data().count,
                     bannedUsers: bannedSnap.data().count
                 }));
+
+                // Fetch Active Today
+                const yesterday = new Date();
+                yesterday.setHours(yesterday.getHours() - 24);
+                const activeQ = query(usersColl, where('lastActive', '>', yesterday)); // Firestore will auto-convert Date to Timestamp in queries usually, but explicit Timestamp is safer if imported
+                const activeSnap = await getCountFromServer(activeQ);
+
+                setStats(prev => ({
+                    ...prev,
+                    activeToday: activeSnap.data().count
+                }));
             } catch (error) {
                 console.error("Failed to fetch stats:", error);
             }
@@ -181,6 +192,13 @@ const AdminDashboard = () => {
                     <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#10b981', display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <CheckCircle size={20} /> {stats.status}
                     </div>
+                </div>
+                <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: '20px', background: 'var(--glass-background)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                        <span style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Active (24h)</span>
+                        <Activity size={20} color="#f59e0b" />
+                    </div>
+                    <div className="text-glow" style={{ fontSize: '2.5rem', fontWeight: '800', color: 'var(--color-text)' }}>{stats?.activeToday || 0}</div>
                 </div>
             </div>
 

@@ -33,14 +33,19 @@ export const FruitProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     // -------------------------------------------------------------------------
-    // NUCLEAR REWRITE: Strict Real-Time Sync Logic
+    // NUCLEAR REWRITE: Strict Real-Time Sync Logic (Household Aware)
     // -------------------------------------------------------------------------
     useEffect(() => {
         let unsubscribe = () => { };
 
         if (currentUser) {
             setLoading(true);
-            const collectionPath = `users/${currentUser.uid}/inventory`;
+
+            // Determine Collection Path: Household vs Personal
+            const householdId = userProfile?.householdId;
+            const collectionPath = householdId
+                ? `households/${householdId}/inventory`
+                : `users/${currentUser.uid}/inventory`;
 
             try {
                 // 3. Logic Requirements: Create a query
@@ -109,7 +114,7 @@ export const FruitProvider = ({ children }) => {
             console.log("🔌 Disconnecting Firestore Listener");
             unsubscribe();
         };
-    }, [currentUser]);
+    }, [currentUser, userProfile?.householdId]); // Re-run when householdId changes
 
     // -------------------------------------------------------------------------
     // Consumed History Listener (Daily Reset)
@@ -146,18 +151,27 @@ export const FruitProvider = ({ children }) => {
     // Write Operations (Must match Read Path exactly)
     // -------------------------------------------------------------------------
 
+    // Helper to get correct inventory path
+    const getInventoryPath = () => {
+        if (!currentUser) return null;
+        const householdId = userProfile?.householdId;
+        return householdId ? `households/${householdId}/inventory` : `users/${currentUser.uid}/inventory`;
+    };
+
     const addFruit = async (fruit) => {
         if (!currentUser) throw new Error("User not authenticated");
-        const collectionPath = `users/${currentUser.uid}/inventory`;
+        const collectionPath = getInventoryPath();
         await addDoc(collection(db, collectionPath), {
             ...fruit,
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            createdBy: currentUser.uid // Track who added it
         });
     };
 
     const removeFruit = async (id) => {
         if (!currentUser) return;
-        const docPath = `users/${currentUser.uid}/inventory/${id}`;
+        const collectionPath = getInventoryPath();
+        const docPath = `${collectionPath}/${id}`;
         await deleteDoc(doc(db, docPath));
     };
 
@@ -169,7 +183,8 @@ export const FruitProvider = ({ children }) => {
 
         // 1. Update Inventory
         const newQuantity = (fruit.quantity || 1) - amount;
-        const inventoryPath = `users/${currentUser.uid}/inventory/${id}`;
+        const collectionPath = getInventoryPath();
+        const inventoryPath = `${collectionPath}/${id}`;
 
         if (newQuantity <= 0) {
             await deleteDoc(doc(db, inventoryPath));
@@ -179,12 +194,16 @@ export const FruitProvider = ({ children }) => {
             });
         }
 
-        // 2. Log Consumption (New Collection)
+        // 2. Log Consumption (Shared or Personal?)
+        // Decision: Log to personal history for "My contributions" AND Household history?
+        // For MVP: Log to User's CONSUMED collection so "Reports" still work for the user.
+        // We can ALSO log to household if we want shared stats later.
         const consumedPath = `users/${currentUser.uid}/consumed`;
         await addDoc(collection(db, consumedPath), {
             fruitName: fruit.name,
             amount: amount,
-            consumedAt: new Date().toISOString()
+            consumedAt: new Date().toISOString(),
+            householdId: userProfile?.householdId || null
         });
 
         // 3. Broadcast to Global Feed (Privacy-First)
@@ -197,10 +216,9 @@ export const FruitProvider = ({ children }) => {
         const fruit = state.fruits.find(f => f.id === id);
         if (!fruit) return;
 
-        // 1. Update Inventory (Delete or Decrement)
-        // For waste, usually we throw the whole thing out, but support partial too
         const newQuantity = (fruit.quantity || 1) - amount;
-        const inventoryPath = `users/${currentUser.uid}/inventory/${id}`;
+        const collectionPath = getInventoryPath();
+        const inventoryPath = `${collectionPath}/${id}`;
 
         if (newQuantity <= 0) {
             await deleteDoc(doc(db, inventoryPath));
@@ -216,7 +234,8 @@ export const FruitProvider = ({ children }) => {
             fruitName: fruit.name,
             amount: amount,
             wasteDate: new Date().toISOString(),
-            reason: 'Expired' // capable of expansion
+            reason: 'Expired',
+            householdId: userProfile?.householdId || null
         });
 
         // 3. Broadcast to Global Feed

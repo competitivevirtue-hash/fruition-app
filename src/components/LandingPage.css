@@ -1,9 +1,36 @@
 .landing-page {
     font-family: 'Outfit', sans-serif;
-    color: var(--color-text);
+    color: #ffffff;
     background: radial-gradient(circle at top left, #1a1f35 0%, #0f1219 100%);
     min-height: 100vh;
     overflow-x: hidden;
+}
+
+/* ... (skipping unchanged lines) ... */
+
+.nav-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.9);
+    padding: 0.6rem 1.2rem;
+    /* ... */
+}
+
+/* ... */
+
+.hero-subtitle {
+    font-size: 1.2rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 2.5rem;
+    line-height: 1.6;
+    max-width: 600px;
+}
+
+/* ... */
+
+.section-header p {
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: 3rem;
 }
 
 /* Nav */
@@ -43,7 +70,7 @@
 .nav-btn {
     background: transparent;
     border: none;
-    color: var(--color-text);
+    color: rgba(255, 255, 255, 0.9);
     padding: 0.6rem 1.2rem;
     cursor: pointer;
     font-weight: 500;
@@ -257,7 +284,7 @@
 }
 
 .section-header p {
-    color: var(--color-text-muted);
+    color: rgba(255, 255, 255, 0.6);
     margin-bottom: 3rem;
 }
 

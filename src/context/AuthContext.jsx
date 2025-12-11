@@ -10,7 +10,7 @@ import {
     signInWithPopup,
     sendPasswordResetEmail
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc, runTransaction, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, runTransaction, serverTimestamp, collection, query, where, getDocs, arrayUnion, arrayRemove, deleteField } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 
 import LoadingSplash from '../components/LoadingSplash';
@@ -216,6 +216,83 @@ export function AuthProvider({ children }) {
         }
     }
 
+    // Household Logic
+    async function createHousehold(name) {
+        if (!currentUser) throw new Error("Must be logged in");
+
+        // Generate simple 6-char code
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let inviteCode = '';
+        for (let i = 0; i < 6; i++) inviteCode += chars.charAt(Math.floor(Math.random() * chars.length));
+
+        const householdRef = doc(collection(db, 'households')); // Auto-ID
+
+        await setDoc(householdRef, {
+            name,
+            inviteCode,
+            createdBy: currentUser.uid,
+            createdAt: serverTimestamp(),
+            members: [currentUser.uid]
+        });
+
+        // Update User Profile
+        const userRef = doc(db, 'users', currentUser.uid);
+        await updateDoc(userRef, { householdId: householdRef.id });
+
+        // Update Local State
+        setUserProfile(prev => ({ ...prev, householdId: householdRef.id }));
+
+        return householdRef.id;
+    }
+
+    async function joinHousehold(code) {
+        if (!currentUser) throw new Error("Must be logged in");
+
+        // Find household by code
+        const householdsRef = collection(db, 'households');
+        const q = query(householdsRef, where('inviteCode', '==', code.toUpperCase()));
+        const snapshot = await getDocs(q);
+
+        if (snapshot.empty) throw new Error("Invalid Invite Code");
+
+        const householdDoc = snapshot.docs[0];
+        const householdId = householdDoc.id;
+
+        // Add user to household members
+        await updateDoc(doc(db, 'households', householdId), {
+            members: arrayUnion(currentUser.uid)
+        });
+
+        // Update User Profile
+        await updateDoc(doc(db, 'users', currentUser.uid), { householdId });
+
+        // Update Local State
+        setUserProfile(prev => ({ ...prev, householdId }));
+
+        return householdId;
+    }
+
+    async function leaveHousehold() {
+        if (!currentUser || !userProfile?.householdId) return;
+
+        const householdId = userProfile.householdId;
+
+        // Remove from household members
+        await updateDoc(doc(db, 'households', householdId), {
+            members: arrayRemove(currentUser.uid)
+        });
+
+        // Remove from User Profile
+        await updateDoc(doc(db, 'users', currentUser.uid), { householdId: deleteField() });
+
+        // Update Local State
+        setUserProfile(prev => {
+            const temp = { ...prev };
+            delete temp.householdId;
+            return temp;
+        });
+    }
+
     // Presence Heartbeat: Update 'lastActive' every 5 minutes while app is open
     useEffect(() => {
         if (!currentUser) return;
@@ -283,6 +360,9 @@ export function AuthProvider({ children }) {
         loginWithApple,
         updateUserSettings,
         resetPassword,
+        createHousehold,
+        joinHousehold,
+        leaveHousehold,
         isAdmin: userProfile?.role === 'admin' || currentUser?.email === 'paytonpleasanti@gmail.com'
     };
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, User, Settings, LogOut, ChevronLeft, AlertTriangle, Mail, Shield, Lock, Clock, Globe } from 'lucide-react';
+import { X, User, Settings, LogOut, ChevronLeft, AlertTriangle, Mail, Shield, Lock, Clock, Globe, Home } from 'lucide-react';
 import { auth } from '../firebase';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { BADGES } from '../utils/fruitUtils';
@@ -8,7 +8,9 @@ import { useAuth } from '../context/AuthContext';
 import { useFruit } from '../context/FruitContext.jsx';
 import HistoryView from './HistoryView';
 import './BioModal.css';
-const ProfileModal = ({ isOpen, onClose }) => {
+import { Home } from 'lucide-react'; // Ensure Home icon is available if not imported (it was imported in line 3 on original file? No, checks line 3: X, User, Settings... Wait, line 3 has many imports. I will verify if Home needs to be added or if check line 3. Line 3 in original file: import { X, User, Settings, LogOut, ChevronLeft, AlertTriangle, Mail, Shield, Lock, Clock, Globe } from 'lucide-react'; -- Home is missing.)
+
+const ProfileModal = ({ isOpen, onClose, onOpenHousehold }) => {
     const { currentUser, userProfile, logout, login, signup, deleteAccount, loginWithApple, claimFounderStatus, updateUserSettings, isAdmin, resetPassword } = useAuth();
     const [showEmailForm, setShowEmailForm] = useState(false);
     const [view, setView] = useState('main'); // 'main' or 'settings'
@@ -239,6 +241,32 @@ const ProfileModal = ({ isOpen, onClose }) => {
                                             </div>
 
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                                {/* Household Member Button */}
+                                                <button
+                                                    className="btn"
+                                                    onClick={() => {
+                                                        console.log("Opening household modal");
+                                                        if (onOpenHousehold) onOpenHousehold();
+                                                        else console.error("onOpenHousehold is undefined");
+                                                    }}
+                                                    style={{
+                                                        width: '100%',
+                                                        padding: '12px',
+                                                        background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.1) 100%)',
+                                                        color: '#60a5fa',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        gap: '0.75rem',
+                                                        fontSize: '1rem',
+                                                        fontWeight: 600,
+                                                        border: '1px solid rgba(59, 130, 246, 0.2)'
+                                                    }}
+                                                >
+                                                    <Home size={18} />
+                                                    {userProfile?.householdId ? 'Manage Household' : 'Create/Join Family'}
+                                                </button>
+
                                                 <button
                                                     className="btn"
                                                     onClick={() => setView('settings')}
