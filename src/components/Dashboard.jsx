@@ -151,8 +151,8 @@ const Dashboard = () => {
                             })()}
                         </h1>
 
-                        <div style={{ position: 'absolute', top: '2rem', right: '2rem' }}>
-                            {/* Old Reports Button Removed */}
+                        <div style={{ position: 'absolute', top: '2rem', right: '2rem', zIndex: 10 }}>
+                            <NotificationBell />
                         </div>
 
                         <div style={{ marginTop: '1.5rem', marginBottom: '1rem' }}>

@@ -1,23 +1,70 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { X, Globe, Radio } from 'lucide-react';
-
-// Simplified World Map SVG Path (Mercator)
-const WORLD_MAP_PATH = "M156.4,264.4l-6.3,9.4l0,3.1l6.3,0L156.4,264.4z M153.2,255l3.1,3.1l6.3,0l3.1-6.3l-3.1-6.3L153.2,255z M194.1,239.3l9.4-3.1 l3.1-6.3l-3.1-6.3l-12.6,3.1l-6.3,6.3L194.1,239.3z M219.2,233l6.3-3.1l3.1-9.4l-6.3-3.1l-9.4,3.1L219.2,233z M228.7,195.3l3.1-3.1 l0-6.3l-6.3-3.1l-6.3,6.3l3.1,6.3L228.7,195.3z M253.8,189l3.1-3.1l-3.1-6.3l-9.4,3.1l-3.1,6.3L253.8,189z M450,225l-6.3,0l-6.3-6.3 l3.1-15.7l12.6,6.3l3.1,9.4L450,225z M478.3,160.7l-9.4,0l-6.3,9.4l0,6.3l9.4,6.3l6.3-3.1l3.1-9.4L478.3,160.7z M563.1,267.5 l-9.4,3.1l-3.1,9.4l6.3,3.1l9.4-6.3l0-6.3L563.1,267.5z M660.5,236.1l-3.1,6.3l3.1,6.3l9.4-3.1l3.1-6.3l-6.3-3.1L660.5,236.1z M666.8,189l-9.4,3.1l-3.1,9.4l6.3,3.1l9.4-6.3l0-6.3L666.8,189z M795.6,267.5l-6.3,9.4l0,6.3l9.4,3.1l6.3-9.4l-3.1-6.3 L795.6,267.5z M852.1,189l-6.3,3.1l-0,9.4l6.3,3.1l9.4-6.3l3.1-9.4L852.1,189z M877.3,123l-9.4-3.1l-3.1,6.3l3.1,6.3l12.6-3.1 l0-3.1L877.3,123z M257,364.9l-6.3-3.1l-9.4,3.1l-3.1,9.4l6.3,3.1l9.4-6.3L257,364.9z M323,399.4l-3.1,6.3l3.1,6.3l12.6-3.1 l3.1-6.3l-9.4-3.1L323,399.4z M351.2,430.8l-0,6.3l6.3,3.1l6.3-3.1l3.1-9.4l-6.3-3.1L351.2,430.8z M414.1,449.7l-9.4,0l-6.3,9.4 l0,6.3l9.4,3.1l6.3-9.4L414.1,449.7z M489.5,430.8l-6.3,3.1l-3.1,9.4l3.1,9.4l9.4,3.1l3.1-6.3L489.5,430.8z M610.2,499.9l-6.3,3.1 l-3.1,9.4l6.3,9.4l9.4-3.1l3.1-12.6L610.2,499.9z M739,430.8l-9.4,3.1l-3.1,9.4l6.3,3.1l9.4-6.3l0-6.3L739,430.8z";
+import { X, Globe, Radio, Navigation } from 'lucide-react';
 
 const AdminWorldMap = ({ isOpen, onClose, activeUserCount }) => {
-    if (!isOpen) return null;
+    const [myLocation, setMyLocation] = useState(null);
+    const [geoError, setGeoError] = useState(null);
 
-    // Generate random user locations based on count
-    // This mocks the "Live Data" since we don't have real geo-coordinates
+    // 1. Get Real Location on Mount
+    useEffect(() => {
+        if (isOpen && 'geolocation' in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const { latitude, longitude } = position.coords;
+                    setMyLocation({ lat: latitude, lng: longitude });
+                    console.log("📍 GPS Locked:", latitude, longitude);
+                },
+                (error) => {
+                    console.error("Geolocation error:", error);
+                    setGeoError("Location access denied. Showing roughly estimated position.");
+                }
+            );
+        }
+    }, [isOpen]);
+
+    // 2. Projection Logic (Equirectangular)
+    // Map Image is Equirectangular: Width = 360 units, Height = 180 units
+    // X = (lon + 180) * (MapWidth / 360)
+    // Y = ((-1 * lat) + 90) * (MapHeight / 180)
+    const project = (lat, lng) => {
+        const x = (lng + 180) * (100 / 360);
+        const y = ((-1 * lat) + 90) * (100 / 180);
+        return { x, y };
+    };
+
+    // 3. Generate Mock Users + Real User
     const userDots = React.useMemo(() => {
-        return Array.from({ length: Math.max(activeUserCount, 1) }).map((_, i) => ({
-            id: i,
-            x: Math.random() * 80 + 10, // 10% to 90% width
-            y: Math.random() * 60 + 20, // 20% to 80% height (roughly habitable zones)
-            delay: Math.random() * 2,
-        }));
-    }, [activeUserCount]);
+        // Base mock locations (Major hubs)
+        const hubs = [
+            { lat: 31.23, lng: 121.47, label: "Shanghai, CN" },
+            { lat: 51.50, lng: -0.12, label: "London, UK" },
+            { lat: 52.52, lng: 13.40, label: "Berlin, DE" },
+            { lat: 35.67, lng: 139.65, label: "Tokyo, JP" },
+            { lat: 40.71, lng: -74.00, label: "New York, USA" },
+            { lat: -23.55, lng: -46.63, label: "Sao Paulo, BR" },
+            { lat: -33.86, lng: 151.20, label: "Sydney, AU" }
+        ];
+
+        const dots = hubs.slice(0, Math.max(0, activeUserCount - 1)).map((hub, i) => {
+            const { x, y } = project(hub.lat, hub.lng);
+            return { id: `mock-${i}`, x, y, label: hub.label, isMe: false };
+        });
+
+        // Add "ME"
+        if (myLocation) {
+            const { x, y } = project(myLocation.lat, myLocation.lng);
+            dots.unshift({ id: 'me', x, y, label: "You (Active)", isMe: true });
+        } else {
+            // Fallback if no GPS yet: Oklahoma
+            const { x, y } = project(35.46, -97.51);
+            dots.unshift({ id: 'me-fallback', x, y, label: "Tracking...", isMe: true });
+        }
+
+        return dots;
+    }, [activeUserCount, myLocation]);
+
+    if (!isOpen) return null;
 
     return (
         <motion.div
@@ -37,7 +84,7 @@ const AdminWorldMap = ({ isOpen, onClose, activeUserCount }) => {
                 animate={{ scale: 1, opacity: 1 }}
                 onClick={(e) => e.stopPropagation()}
                 style={{
-                    width: '90%', maxWidth: '1000px', height: '80vh',
+                    width: '90%', maxWidth: '1100px', height: '85vh',
                     background: '#09090b', borderRadius: '24px',
                     border: '1px solid rgba(255,255,255,0.1)',
                     display: 'flex', flexDirection: 'column', overflow: 'hidden',
@@ -53,7 +100,8 @@ const AdminWorldMap = ({ isOpen, onClose, activeUserCount }) => {
                         <div>
                             <h2 style={{ fontSize: '1.2rem', margin: 0, color: 'white' }}>Global Activity Map</h2>
                             <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <Radio size={12} className="pulse-text" /> Live Signal Tracking
+                                <Radio size={12} className="pulse-text" />
+                                {myLocation ? " GPS Locked & Tracking" : " Triangulating Position..."}
                             </p>
                         </div>
                     </div>
@@ -63,32 +111,60 @@ const AdminWorldMap = ({ isOpen, onClose, activeUserCount }) => {
                 </div>
 
                 {/* Map Container */}
-                <div style={{ flex: 1, position: 'relative', background: 'radial-gradient(circle at center, #18181b 0%, #000000 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                <div style={{
+                    flex: 1,
+                    position: 'relative',
+                    background: '#050505',
+                    overflow: 'hidden',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                }}>
+                    {/* The Map Image (Equirectangular Standard) */}
+                    <div style={{
+                        position: 'relative',
+                        width: '100%',
+                        maxWidth: '1000px',
+                        aspectRatio: '2/1', // Standard 2:1 ratio for Equirectangular
+                        margin: '0 auto'
+                    }}>
+                        <img
+                            src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/World_map_blank_without_borders.svg/2000px-World_map_blank_without_borders.svg.png"
+                            alt="World Map"
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'cover',
+                                filter: 'invert(1) opacity(0.2)', // Make it dark and subtle
+                                pointerEvents: 'none'
+                            }}
+                        />
+                        {/* Overlay detailed border map if possible, or just use outlines. 
+                            The above is a blank map. Let's try a better one with borders if the user insisted.
+                            Re-swapping to a map WITH borders.
+                        */}
+                        <img
+                            src="https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg"
+                            alt="Borders Overlay"
+                            style={{
+                                position: 'absolute',
+                                inset: 0,
+                                width: '100%',
+                                height: '100%',
+                                filter: 'invert(1) opacity(0.3) drop-shadow(0 0 2px rgba(16,185,129,0.5))',
+                                pointerEvents: 'none'
+                            }}
+                        />
 
-                    {/* Grid Overlay */}
-                    <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)', backgroundSize: '40px 40px', pointerEvents: 'none' }} />
+                        {/* Grid Lines */}
+                        <div style={{
+                            position: 'absolute',
+                            inset: 0,
+                            backgroundImage: 'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)',
+                            backgroundSize: '10% 20%', // Lat/Long lines roughly
+                            pointerEvents: 'none'
+                        }} />
 
-                    {/* World Map SVG (Simplified Dotted Representation for aesthetic) */}
-                    <div style={{ position: 'relative', width: '100%', height: '100%', maxWidth: '800px', maxHeight: '500px' }}>
-                        {/* We use a background image or a constructed SVG. Since we don't have an asset, let's build a "Cyber Grid" map */}
-                        <svg viewBox="0 0 1000 500" style={{ width: '100%', height: '100%', filter: 'drop-shadow(0 0 10px rgba(16, 185, 129, 0.2))' }}>
-                            {/* Cyber-Grid Overlay (Subtle) */}
-                            <defs>
-                                <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-                                    <circle cx="1" cy="1" r="1" fill="rgba(255,255,255,0.05)" />
-                                </pattern>
-                            </defs>
-                            <rect width="100%" height="100%" fill="url(#grid)" />
-
-                            {/* Actual World Map Path */}
-                            <path
-                                d={WORLD_MAP_PATH}
-                                fill="rgba(16, 185, 129, 0.1)"
-                                stroke="rgba(16, 185, 129, 0.3)"
-                                strokeWidth="0.5"
-                                style={{ filter: 'drop-shadow(0 0 10px rgba(16, 185, 129, 0.2))' }}
-                            />
-                        </svg>
 
                         {/* User Dots */}
                         {userDots.map(dot => (
@@ -98,74 +174,135 @@ const AdminWorldMap = ({ isOpen, onClose, activeUserCount }) => {
                                     position: 'absolute',
                                     left: `${dot.x}%`,
                                     top: `${dot.y}%`,
-                                    transform: 'translate(-50%, -50%)'
+                                    transform: 'translate(-50%, -50%)',
+                                    zIndex: 10
                                 }}
                             >
-                                <div className="map-user-dot">
+                                <div className={`map-user-dot ${dot.isMe ? 'is-me' : ''}`}>
                                     <div className="dot-core" />
                                     <div className="dot-ring" />
-                                    <div className="dot-label">User Active</div>
+                                    <div className="dot-radar" />
+                                    <div className="dot-label">
+                                        {dot.isMe && <Navigation size={10} style={{ marginRight: 4 }} />}
+                                        {dot.label}
+                                    </div>
                                 </div>
                             </div>
                         ))}
                     </div>
+
+                    {/* Coordinates Display */}
+                    {myLocation && (
+                        <div style={{
+                            position: 'absolute',
+                            bottom: '20px',
+                            right: '20px',
+                            fontFamily: 'monospace',
+                            color: '#10b981',
+                            background: 'rgba(0,0,0,0.7)',
+                            padding: '8px 12px',
+                            borderRadius: '8px',
+                            border: '1px solid rgba(16,185,129,0.3)',
+                            fontSize: '0.8rem'
+                        }}>
+                            LAT: {myLocation.lat.toFixed(4)} | LNG: {myLocation.lng.toFixed(4)}
+                        </div>
+                    )}
                 </div>
 
                 {/* Footer Stats */}
-                <div style={{ padding: '1.5rem', background: '#09090b', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', gap: '2rem' }}>
+                <div style={{ padding: '1.5rem', background: '#09090b', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', gap: '4rem' }}>
                     <div>
                         <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Active Nodes</div>
                         <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#10b981' }}>{activeUserCount}</div>
+                    </div>
+                    <div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Network Status</div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#3b82f6', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            Online <span className="status-dot"></span>
+                        </div>
                     </div>
                 </div>
             </motion.div>
             <style jsx>{`
                 .map-user-dot {
                     position: relative;
-                    width: 20px;
-                    height: 20px;
+                    width: 0;
+                    height: 0;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                 }
                 .dot-core {
-                    width: 8px;
-                    height: 8px;
+                    width: 6px;
+                    height: 6px;
                     background: #10b981;
                     border-radius: 50%;
-                    box-shadow: 0 0 10px #10b981, 0 0 20px #10b981;
-                    z-index: 2;
+                    box-shadow: 0 0 10px #10b981;
+                    position: absolute;
+                }
+                .is-me .dot-core {
+                    background: #3b82f6; 
+                    box-shadow: 0 0 15px #3b82f6;
+                    width: 8px; height: 8px;
                 }
                 .dot-ring {
                     position: absolute;
-                    width: 100%;
-                    height: 100%;
+                    width: 20px; height: 20px;
                     border: 1px solid #10b981;
                     border-radius: 50%;
                     animation: ripple 2s infinite ease-out;
                     opacity: 0;
                 }
+                .is-me .dot-ring {
+                    border-color: #3b82f6;
+                }
+                .dot-radar {
+                    position: absolute;
+                    width: 100px; height: 100px;
+                    border-radius: 50%;
+                    background: conic-gradient(from 0deg, transparent 0deg, rgba(16, 185, 129, 0.1) 60deg, transparent 60deg);
+                    animation: radar-spin 4s linear infinite;
+                    opacity: 0.1;
+                    pointer-events: none;
+                }
+                .is-me .dot-radar {
+                     background: conic-gradient(from 0deg, transparent 0deg, rgba(59, 130, 246, 0.15) 60deg, transparent 60deg);
+                }
+                
                 .dot-label {
                     position: absolute;
-                    top: -20px;
+                    top: -25px;
                     left: 50%;
                     transform: translateX(-50%);
-                    background: rgba(16, 185, 129, 0.2);
-                    padding: 2px 6px;
+                    background: rgba(0,0,0,0.8);
+                    padding: 4px 8px;
                     border-radius: 4px;
-                    font-size: 0.6rem;
-                    color: #10b981;
+                    font-size: 0.7rem;
+                    color: #fff;
                     white-space: nowrap;
-                    opacity: 0;
-                    transition: opacity 0.3s;
-                    border: 1px solid rgba(16, 185, 129, 0.4);
+                    border: 1px solid rgba(255,255,255,0.2);
+                    display: flex; alignItems: center;
                 }
-                .map-user-dot:hover .dot-label {
-                    opacity: 1;
+                
+                .status-dot {
+                    width: 8px; height: 8px; background: #3b82f6; border-radius: 50%;
+                    box-shadow: 0 0 10px #3b82f6;
+                    animation: pulse 2s infinite;
                 }
+
                 @keyframes ripple {
                     0% { transform: scale(0.5); opacity: 0.8; }
                     100% { transform: scale(3); opacity: 0; }
+                }
+                @keyframes radar-spin {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                }
+                @keyframes pulse {
+                    0% { opacity: 1; }
+                    50% { opacity: 0.5; }
+                    100% { opacity: 1; }
                 }
             `}</style>
         </motion.div>

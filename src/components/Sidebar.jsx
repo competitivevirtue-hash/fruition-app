@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, LayoutDashboard, Apple, Calendar, BookOpen, User, LogOut, MoreHorizontal, ChevronLeft, ChevronRight, TrendingUp } from 'lucide-react';
 import Logo from './Logo';
-import NotificationBell from './NotificationBell';
 import './Layout.css';
 
 const Sidebar = ({ isOpen, onClose, currentView, onNavigate, onOpenSettings, onOpenProfile }) => {
@@ -146,22 +145,6 @@ const Sidebar = ({ isOpen, onClose, currentView, onNavigate, onOpenSettings, onO
                 >
                     <MoreHorizontal size={20} />
                     {!isCollapsed && "More"}
-                </button>
-                <button
-                    className="sidebar-bell-btn"
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: isCollapsed ? 'center' : 'flex-start',
-                        padding: isCollapsed ? '12px' : '12px 16px',
-                        background: 'transparent',
-                        border: 'none',
-                        textAlign: 'left',
-                        width: '100%'
-                    }}
-                >
-                    <NotificationBell />
-                    {!isCollapsed && <span style={{ marginLeft: '1rem', fontWeight: 500, color: 'var(--color-text)' }}>Alerts</span>}
                 </button>
 
                 <button
