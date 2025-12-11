@@ -1,68 +1,81 @@
+```javascript
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { X, Globe, Radio, Navigation } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { collection, query, where, getDocs, limit } from 'firebase/firestore';
+import { db } from '../firebase';
 
-const AdminWorldMap = ({ isOpen, onClose, activeUserCount }) => {
+const AdminWorldMap = ({ isOpen, onClose }) => {
+    const { updateLastActive } = useAuth();
     const [myLocation, setMyLocation] = useState(null);
-    const [geoError, setGeoError] = useState(null);
+    const [activeUsers, setActiveUsers] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    // 1. Get Real Location on Mount
+    // 1. Get Real Geometry & Report to DB
     useEffect(() => {
         if (isOpen && 'geolocation' in navigator) {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
                     const { latitude, longitude } = position.coords;
-                    setMyLocation({ lat: latitude, lng: longitude });
-                    console.log("📍 GPS Locked:", latitude, longitude);
+                    const loc = { lat: latitude, lng: longitude };
+                    setMyLocation(loc);
+                    // Push live location to Firestore
+                    updateLastActive(loc); 
                 },
-                (error) => {
-                    console.error("Geolocation error:", error);
-                    setGeoError("Location access denied. Showing roughly estimated position.");
-                }
+                (error) => console.error("GPS Error:", error)
             );
         }
+    }, [isOpen, updateLastActive]);
+
+    // 2. Fetch ALL Active Users from DB
+    useEffect(() => {
+        if (!isOpen) return;
+        
+        const fetchUsers = async () => {
+            try {
+                // Determine "Active" as last 24 hours for now (to ensure we see dots)
+                // In production, might want 'last 1 hour'
+                const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+                const q = query(
+                    collection(db, 'users'),
+                    where('lastActive', '>', yesterday),
+                    limit(50)
+                );
+                
+                const snapshot = await getDocs(q);
+                const users = snapshot.docs
+                    .map(doc => ({ id: doc.id, ...doc.data() }))
+                    .filter(u => u.location); // Only users with location data
+                
+                setActiveUsers(users);
+            } catch (err) {
+                console.error("Error fetching map data:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchUsers();
+        // Poll every 30s
+        const interval = setInterval(fetchUsers, 30000);
+        return () => clearInterval(interval);
     }, [isOpen]);
 
-    // 2. Projection Logic (Equirectangular)
-    // Map Image is Equirectangular: Width = 360 units, Height = 180 units
-    // X = (lon + 180) * (MapWidth / 360)
-    // Y = ((-1 * lat) + 90) * (MapHeight / 180)
+    // 3. PURE Equirectangular Projection
+    // x = (lng + 180) * (W / 360)
+    // y = (90 - lat) * (H / 180)
+    // No manual offsets. Reliant on using a CORRECT 2:1 Aspect Ratio Map Image.
     const project = (lat, lng) => {
-        const x = (lng + 180) * (100 / 360);
-        const y = ((-1 * lat) + 90) * (100 / 180);
-        return { x, y };
+        // Ensure lat/lng are numbers
+        const l = parseFloat(lat);
+        const ln = parseFloat(lng);
+        
+        return {
+            x: (ln + 180) * (100 / 360),
+            y: (90 - l) * (100 / 180)
+        };
     };
-
-    // 3. Generate Mock Users + Real User
-    const userDots = React.useMemo(() => {
-        // Base mock locations (Major hubs)
-        const hubs = [
-            { lat: 31.23, lng: 121.47, label: "Shanghai, CN" },
-            { lat: 51.50, lng: -0.12, label: "London, UK" },
-            { lat: 52.52, lng: 13.40, label: "Berlin, DE" },
-            { lat: 35.67, lng: 139.65, label: "Tokyo, JP" },
-            { lat: 40.71, lng: -74.00, label: "New York, USA" },
-            { lat: -23.55, lng: -46.63, label: "Sao Paulo, BR" },
-            { lat: -33.86, lng: 151.20, label: "Sydney, AU" }
-        ];
-
-        const dots = hubs.slice(0, Math.max(0, activeUserCount - 1)).map((hub, i) => {
-            const { x, y } = project(hub.lat, hub.lng);
-            return { id: `mock-${i}`, x, y, label: hub.label, isMe: false };
-        });
-
-        // Add "ME"
-        if (myLocation) {
-            const { x, y } = project(myLocation.lat, myLocation.lng);
-            dots.unshift({ id: 'me', x, y, label: "You (Active)", isMe: true });
-        } else {
-            // Fallback if no GPS yet: Oklahoma
-            const { x, y } = project(35.46, -97.51);
-            dots.unshift({ id: 'me-fallback', x, y, label: "Tracking...", isMe: true });
-        }
-
-        return dots;
-    }, [activeUserCount, myLocation]);
 
     if (!isOpen) return null;
 
@@ -98,10 +111,10 @@ const AdminWorldMap = ({ isOpen, onClose, activeUserCount }) => {
                             <Globe size={24} color="#10b981" />
                         </div>
                         <div>
-                            <h2 style={{ fontSize: '1.2rem', margin: 0, color: 'white' }}>Global Activity Map</h2>
+                            <h2 style={{ fontSize: '1.2rem', margin: 0, color: 'white' }}>Live Network Activity</h2>
                             <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <Radio size={12} className="pulse-text" />
-                                {myLocation ? " GPS Locked & Tracking" : " Triangulating Position..."}
+                                <Radio size={12} className="pulse-text" /> 
+                                {loading ? "Scanning Network..." : `Tracking ${ activeUsers.length } Active Nodes`}
                             </p>
                         </div>
                     </div>
@@ -111,84 +124,70 @@ const AdminWorldMap = ({ isOpen, onClose, activeUserCount }) => {
                 </div>
 
                 {/* Map Container */}
-                <div style={{
-                    flex: 1,
-                    position: 'relative',
-                    background: '#050505',
+                <div style={{ 
+                    flex: 1, 
+                    position: 'relative', 
+                    background: '#050505', 
                     overflow: 'hidden',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center'
                 }}>
-                    {/* The Map Image (Equirectangular Standard) */}
-                    <div style={{
-                        position: 'relative',
-                        width: '100%',
-                        maxWidth: '1000px',
-                        aspectRatio: '2/1', // Standard 2:1 ratio for Equirectangular
-                        margin: '0 auto'
+                    {/* The Map Image - MUST be Standard 2:1 Equirectangular */}
+                    <div style={{ 
+                        position: 'relative', 
+                        width: '100%', 
+                        maxWidth: '1000px', 
+                        aspectRatio: '2/1', 
+                        margin: '0 auto',
+                        backgroundImage: 'url(https://upload.wikimedia.org/wikipedia/commons/e/ea/Equirectangular-projection.jpg)',
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center'
                     }}>
-                        <img
-                            src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/World_map_blank_without_borders.svg/2000px-World_map_blank_without_borders.svg.png"
-                            alt="World Map"
-                            style={{
-                                width: '100%',
-                                height: '100%',
-                                objectFit: 'cover',
-                                filter: 'invert(1) opacity(0.2)', // Make it dark and subtle
-                                pointerEvents: 'none'
-                            }}
-                        />
-                        {/* Overlay detailed border map if possible, or just use outlines. 
-                            The above is a blank map. Let's try a better one with borders if the user insisted.
-                            Re-swapping to a map WITH borders.
-                        */}
-                        <img
-                            src="https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg"
-                            alt="Borders Overlay"
-                            style={{
-                                position: 'absolute',
-                                inset: 0,
-                                width: '100%',
-                                height: '100%',
-                                filter: 'invert(1) opacity(0.3) drop-shadow(0 0 2px rgba(16,185,129,0.5))',
-                                pointerEvents: 'none'
-                            }}
-                        />
+                        {/* Dark Overlay to make it look "Cyber" */}
+                        <div style={{ position: 'absolute', inset: 0, background: '#000', opacity: 0.8 }} />
+                        
+                        {/* Border Overlay (Optional, if matching projection) */}
+                        {/* Keeping it simple: Background Image + Dots. The Wikimedia image is standard Equirectangular. */}
 
                         {/* Grid Lines */}
-                        <div style={{
-                            position: 'absolute',
-                            inset: 0,
-                            backgroundImage: 'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)',
-                            backgroundSize: '10% 20%', // Lat/Long lines roughly
-                            pointerEvents: 'none'
+                        <div style={{ 
+                            position: 'absolute', 
+                            inset: 0, 
+                            backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)', 
+                            backgroundSize: '16.66% 33.33%', // 60x60 degree blocks roughly
+                            pointerEvents: 'none',
+                            opacity: 0.3
                         }} />
 
-
-                        {/* User Dots */}
-                        {userDots.map(dot => (
-                            <div
-                                key={dot.id}
-                                style={{
-                                    position: 'absolute',
-                                    left: `${dot.x}%`,
-                                    top: `${dot.y}%`,
-                                    transform: 'translate(-50%, -50%)',
-                                    zIndex: 10
-                                }}
-                            >
-                                <div className={`map-user-dot ${dot.isMe ? 'is-me' : ''}`}>
-                                    <div className="dot-core" />
-                                    <div className="dot-ring" />
-                                    <div className="dot-radar" />
-                                    <div className="dot-label">
-                                        {dot.isMe && <Navigation size={10} style={{ marginRight: 4 }} />}
-                                        {dot.label}
+                        {/* Real User Dots */}
+                        {activeUsers.map(user => {
+                            const { x, y } = project(user.location.lat, user.location.lng);
+                            const isMe = myLocation && Math.abs(user.location.lat - myLocation.lat) < 0.01 && Math.abs(user.location.lng - myLocation.lng) < 0.01;
+                            
+                            return (
+                                <div
+                                    key={user.id}
+                                    style={{
+                                        position: 'absolute',
+                                        left: `${ x }% `,
+                                        top: `${ y }% `,
+                                        transform: 'translate(-50%, -50%)',
+                                        zIndex: isMe ? 20 : 10
+                                    }}
+                                >
+                                    <div className={`map - user - dot ${ isMe ? 'is-me' : '' } `}>
+                                        <div className="dot-core" />
+                                        <div className="dot-ring" />
+                                        {isMe && <div className="dot-radar" />}
+                                        <div className="dot-label">
+                                            {isMe && <Navigation size={10} style={{ marginRight: 4 }} />}
+                                            {isMe ? "YOU" : "User"}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
 
                     {/* Coordinates Display */}
@@ -205,7 +204,7 @@ const AdminWorldMap = ({ isOpen, onClose, activeUserCount }) => {
                             border: '1px solid rgba(16,185,129,0.3)',
                             fontSize: '0.8rem'
                         }}>
-                            LAT: {myLocation.lat.toFixed(4)} | LNG: {myLocation.lng.toFixed(4)}
+                             GPS: {myLocation.lat.toFixed(4)}, {myLocation.lng.toFixed(4)}
                         </div>
                     )}
                 </div>
@@ -213,100 +212,85 @@ const AdminWorldMap = ({ isOpen, onClose, activeUserCount }) => {
                 {/* Footer Stats */}
                 <div style={{ padding: '1.5rem', background: '#09090b', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', gap: '4rem' }}>
                     <div>
-                        <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Active Nodes</div>
-                        <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#10b981' }}>{activeUserCount}</div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Active in last 24h</div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#10b981' }}>{activeUsers.length}</div>
                     </div>
-                    <div>
-                        <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Network Status</div>
-                        <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#3b82f6', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            Online <span className="status-dot"></span>
-                        </div>
+                     <div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Global Status</div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#10b981' }}>Connected</div>
                     </div>
                 </div>
             </motion.div>
             <style jsx>{`
-                .map-user-dot {
-                    position: relative;
-                    width: 0;
-                    height: 0;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-                .dot-core {
-                    width: 6px;
-                    height: 6px;
-                    background: #10b981;
-                    border-radius: 50%;
-                    box-shadow: 0 0 10px #10b981;
-                    position: absolute;
-                }
-                .is-me .dot-core {
-                    background: #3b82f6; 
-                    box-shadow: 0 0 15px #3b82f6;
-                    width: 8px; height: 8px;
-                }
-                .dot-ring {
-                    position: absolute;
-                    width: 20px; height: 20px;
-                    border: 1px solid #10b981;
-                    border-radius: 50%;
-                    animation: ripple 2s infinite ease-out;
-                    opacity: 0;
-                }
-                .is-me .dot-ring {
-                    border-color: #3b82f6;
-                }
-                .dot-radar {
-                    position: absolute;
-                    width: 100px; height: 100px;
-                    border-radius: 50%;
-                    background: conic-gradient(from 0deg, transparent 0deg, rgba(16, 185, 129, 0.1) 60deg, transparent 60deg);
-                    animation: radar-spin 4s linear infinite;
-                    opacity: 0.1;
-                    pointer-events: none;
-                }
-                .is-me .dot-radar {
-                     background: conic-gradient(from 0deg, transparent 0deg, rgba(59, 130, 246, 0.15) 60deg, transparent 60deg);
-                }
+    .map - user - dot {
+    position: relative;
+    width: 0;
+    height: 0;
+    display: flex;
+    align - items: center;
+    justify - content: center;
+}
+                .dot - core {
+    width: 6px;
+    height: 6px;
+    background: #10b981;
+    border - radius: 50 %;
+    box - shadow: 0 0 10px #10b981;
+    position: absolute;
+}
+                .is - me.dot - core {
+    background: #3b82f6;
+    box - shadow: 0 0 15px #3b82f6;
+    width: 8px; height: 8px;
+}
+                .dot - ring {
+    position: absolute;
+    width: 20px; height: 20px;
+    border: 1px solid #10b981;
+    border - radius: 50 %;
+    animation: ripple 2s infinite ease - out;
+    opacity: 0;
+}
+                .is - me.dot - ring {
+    border - color: #3b82f6;
+}
+                .dot - radar {
+    position: absolute;
+    width: 100px; height: 100px;
+    border - radius: 50 %;
+    background: conic - gradient(from 0deg, transparent 0deg, rgba(59, 130, 246, 0.15) 60deg, transparent 60deg);
+    animation: radar - spin 4s linear infinite;
+    opacity: 0.1;
+    pointer - events: none;
+}
                 
-                .dot-label {
-                    position: absolute;
-                    top: -25px;
-                    left: 50%;
-                    transform: translateX(-50%);
-                    background: rgba(0,0,0,0.8);
-                    padding: 4px 8px;
-                    border-radius: 4px;
-                    font-size: 0.7rem;
-                    color: #fff;
-                    white-space: nowrap;
-                    border: 1px solid rgba(255,255,255,0.2);
-                    display: flex; alignItems: center;
-                }
-                
-                .status-dot {
-                    width: 8px; height: 8px; background: #3b82f6; border-radius: 50%;
-                    box-shadow: 0 0 10px #3b82f6;
-                    animation: pulse 2s infinite;
-                }
+                .dot - label {
+    position: absolute;
+    top: -25px;
+    left: 50 %;
+    transform: translateX(-50 %);
+    background: rgba(0, 0, 0, 0.8);
+    padding: 4px 8px;
+    border - radius: 4px;
+    font - size: 0.7rem;
+    color: #fff;
+    white - space: nowrap;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex; alignItems: center;
+}
 
-                @keyframes ripple {
-                    0% { transform: scale(0.5); opacity: 0.8; }
-                    100% { transform: scale(3); opacity: 0; }
-                }
-                @keyframes radar-spin {
+@keyframes ripple {
+    0 % { transform: scale(0.5); opacity: 0.8; }
+    100 % { transform: scale(3); opacity: 0; }
+}
+@keyframes radar - spin {
                     from { transform: rotate(0deg); }
                     to { transform: rotate(360deg); }
-                }
-                @keyframes pulse {
-                    0% { opacity: 1; }
-                    50% { opacity: 0.5; }
-                    100% { opacity: 1; }
-                }
-            `}</style>
+}
+`}</style>
         </motion.div>
     );
 };
 
 export default AdminWorldMap;
+```
