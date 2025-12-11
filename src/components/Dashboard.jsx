@@ -21,6 +21,8 @@ import RecipeModal from './RecipeModal';
 import StatsModal from './StatsModal';
 import ReportsView from './ReportsView';
 import HouseholdModal from './HouseholdModal';
+import NotificationBell from './NotificationBell';
+import './HouseholdModal.css';
 import { generateSmartRecipe } from '../utils/aiService';
 import { getRelativeTime } from '../utils/fruitUtils';
 import '../App.css'; // Keep utilizing App common styles
@@ -206,16 +208,19 @@ const Dashboard = () => {
                                 <p style={{ color: 'var(--color-text-muted)', marginBottom: '1rem', fontSize: '1.1rem' }}>
                                     Login to start tracking your fruit intake
                                 </p>
-                                <button
-                                    className="btn btn-primary"
-                                    onClick={() => setIsProfileOpen(true)}
-                                    style={{
-                                        padding: '0.75rem 1.5rem',
-                                        boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
-                                    }}
-                                >
-                                    Login / Sign Up
-                                </button>
+                                <div className="header-actions">
+                                    <NotificationBell />
+                                    <button
+                                        className="btn btn-primary"
+                                        onClick={() => setIsProfileOpen(true)}
+                                        style={{
+                                            padding: '0.75rem 1.5rem',
+                                            boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+                                        }}
+                                    >
+                                        Login / Sign Up
+                                    </button>
+                                </div>
                             </div>
                         )}
 

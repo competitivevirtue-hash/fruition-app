@@ -3,6 +3,7 @@ import { Menu } from 'lucide-react';
 import InfoModal from './InfoModal';
 import Sidebar from './Sidebar';
 import Logo from './Logo';
+import NotificationBell from './NotificationBell';
 import './Layout.css';
 
 const Layout = ({ children, currentView, onNavigate, onOpenSettings, onOpenProfile }) => {
@@ -32,6 +33,7 @@ const Layout = ({ children, currentView, onNavigate, onOpenSettings, onOpenProfi
                             <span className="text-gradient" style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>Fruition</span>
                         </div>
                     </div>
+                    <NotificationBell />
                 </header>
 
                 <main className="app-content container">
