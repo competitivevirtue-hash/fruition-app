@@ -49,9 +49,9 @@ const HouseholdModal = ({ isOpen, onClose }) => {
     };
 
     return (
-        <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content glass-panel" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
-                <button className="modal-close" onClick={onClose}><X size={24} /></button>
+        <div className="household-modal-overlay" onClick={onClose}>
+            <div className="household-modal-content glass-panel" onClick={e => e.stopPropagation()}>
+                <button className="close-modal-btn" onClick={onClose}><X size={24} /></button>
 
                 <h2 style={{ fontSize: '1.8rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <Home className="text-primary" /> Family Mode
