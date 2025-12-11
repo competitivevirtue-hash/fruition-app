@@ -1,0 +1,68 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+  
+    // Helper: Check if user is Admin (Member #1 or role 'admin')
+    function isAdmin() {
+      return request.auth != null && (
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.memberId == 1 ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
+    }
+    
+    // Helper: Check if requesting user is banned
+    function isBanned() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.disabled == true;
+    }
+
+    // Default: Deny all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // System Stats (Global Counters)
+    match /system/stats {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && !isBanned(); // Needed for user creation transaction
+    }
+
+    // Public Feed (Global Live Stream)
+    // Append-only logs. Users can write, but never edit or delete.
+    match /public_feed/{eventId} {
+      allow read: if request.auth != null;
+      // Banned users cannot post
+      allow create: if request.auth != null && !isBanned();
+      allow update, delete: if isAdmin(); // Only admins can moderate
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      // Logic:
+      // 1. Owner can read/write their own doc IF they are not banned.
+      // 2. Admins can read/write ANY doc.
+      // 3. CRITICAL: Prevent setting 'disabled: true' on Member #1 (Founder) or the Admin themselves if they are Founder.
+      //    This effectively prevents a coup. Even an admin cannot ban Member #1.
+       
+      allow read: if (request.auth != null && request.auth.uid == userId) || isAdmin();
+      
+      allow write: if (
+        // Case 1: Owner writing (e.g. settings), must not be banned
+        (request.auth.uid == userId && !isBanned()) || 
+        
+        // Case 2: Admin writing
+        (isAdmin() && (
+           // If Admin is updating 'disabled', they generally can, BUT:
+           // Prevent disabling Member #1 (The Founder)
+           // We check if the target doc being potentially updated is Member #1
+           get(/databases/$(database)/documents/users/$(userId)).data.memberId != 1
+        ))
+      );
+      
+      // Subcollections (inventory, etc.)
+      match /{document=**} {
+        allow read, write: if ((request.auth != null && request.auth.uid == userId) || isAdmin()) && !isBanned();
+      }
+    }
+  }
+}

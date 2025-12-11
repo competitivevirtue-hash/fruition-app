@@ -1,0 +1,213 @@
+.dashboard-widgets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.dash-widget {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    min-height: 200px;
+    transition: transform 0.2s;
+}
+
+.dash-widget:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.widget-header {
+    margin-bottom: 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.widget-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.widget-subtitle {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Rainbow Widget */
+.spectrum-container {
+    display: flex;
+    justify-content: space-between;
+    margin: 1rem 0;
+    padding: 0 0.5rem;
+}
+
+.spectrum-node {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: opacity 0.5s ease;
+}
+
+.color-dot {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    margin-bottom: 4px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.spectrum-check {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    font-size: 10px;
+    background: var(--color-text);
+    color: var(--color-background);
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.widget-insight {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    margin-top: auto;
+    font-style: italic;
+}
+
+/* Bio-Impact Widget */
+.benefits-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.benefit-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.benefit-icon-box {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.benefit-name {
+    width: 70px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.benefit-bar-container {
+    flex: 1;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.benefit-bar {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 1s ease-out;
+}
+
+/* Freshness Forecast */
+.freshness-widget.urgent {
+    border: 1px solid rgba(255, 77, 77, 0.3);
+    background: linear-gradient(145deg, rgba(255, 77, 77, 0.05) 0%, rgba(20, 20, 30, 0.6) 100%);
+}
+
+.urgent-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+    border-left: 3px solid #FF4D4D;
+}
+
+.urgent-name {
+    display: block;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.urgent-time {
+    display: block;
+    font-size: 0.8rem;
+    color: #FF4D4D;
+}
+
+.all-good-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-top: 1rem;
+    color: var(--color-primary);
+}
+
+.check-ring {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Live Global Pulse Ticker */
+@keyframes scrollUp {
+    0% {
+        transform: translateY(0);
+    }
+
+    100% {
+        transform: translateY(-70%);
+    }
+
+    /* Adjusted for loop */
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.2);
+        opacity: 0.7;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.pulse-ticker-container {
+    mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+}

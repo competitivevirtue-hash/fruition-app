@@ -1,0 +1,187 @@
+:root {
+    /* Brand Colors */
+    --color-primary: #E11D48;
+    /* Rose 600 */
+    --color-primary-hover: #BE123C;
+    /* Rose 700 */
+    --color-secondary: #F59E0B;
+    /* Default Dark Theme (Space/Night Vibe) */
+    --color-background: #131314;
+    /* Premium Dark Gray */
+    /* Lighter Gray for depth */
+    --color-primary-dark: #FF4D4D;
+    /* Red Apple */
+    --color-secondary-dark: #4ADE80;
+    /* Green Leaf */
+    --color-accent: #FDB813;
+    /* Golden Sun */
+    --color-text: #ffffff;
+    --color-text-muted: #a1a1aa;
+    --color-border: rgba(255, 255, 255, 0.1);
+
+    --glass-background: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+
+    /* Typography */
+    --font-heading: 'Outfit', sans-serif;
+    --font-body: 'Inter', sans-serif;
+
+    --spacing-xs: 0.5rem;
+    --spacing-sm: 0.75rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+
+    --radius-sm: 0.375rem;
+    --radius-md: 0.75rem;
+    --radius-lg: 1rem;
+    --radius-full: 9999px;
+    --color-surface-transparent: rgba(19, 19, 20, 0.7);
+
+    /* Dark Gradient Default */
+    --background-gradient: linear-gradient(135deg, #131314 0%, #1e1e24 100%);
+}
+
+/* Light Mode (Vibrant Fruition) */
+.light-mode {
+    --color-background: #ffffff;
+    --color-surface: #ffffff;
+    --color-primary: #E11D48;
+    /* Energetic Red/Pink */
+    --color-secondary: #F59E0B;
+    /* Vibrant Orange */
+    --color-accent: #8B5CF6;
+    /* Playful Purple */
+    --color-text: #1f2937;
+    --color-text-muted: #6b7280;
+    --color-border: rgba(0, 0, 0, 0.08);
+
+    --glass-background: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.4);
+    --glass-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    --color-surface-transparent: rgba(255, 255, 255, 0.6);
+
+    /* Vibrant Override */
+    --background-gradient: linear-gradient(120deg, #fdfbfb 0%, #ebedee 100%);
+}
+
+/* Explicit Dark Mode */
+.dark-mode {
+    --color-background: #131314;
+    --color-surface: #28292A;
+    --color-primary: #FF4D4D;
+    --color-secondary: #4ADE80;
+    --color-accent: #FDB813;
+    --color-text: #ffffff;
+    --color-text-muted: #a1a1aa;
+    --color-border: rgba(255, 255, 255, 0.1);
+
+    --glass-background: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    --color-surface-transparent: rgba(40, 41, 42, 0.7);
+
+    --background-gradient: linear-gradient(135deg, #131314 0%, #1e1e24 100%);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    margin: 0;
+    font-family: var(--font-body), system-ui, -apple-system, sans-serif;
+    background-color: var(--color-background);
+    background-image: var(--background-gradient, none);
+    background-attachment: fixed;
+    /* Parallax feel */
+    background-size: cover;
+    color: var(--color-text);
+    transition: background-color 0.3s ease, color 0.3s ease;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+}
+
+#root {
+    background-color: var(--color-background);
+    min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+/* Utilities */
+.glass-panel {
+    background: var(--color-surface-transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--spacing-md);
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    font-family: var(--font-body);
+}
+
+.btn-primary {
+    background-color: var(--color-primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: var(--color-primary-hover);
+    transform: translateY(-1px);
+}
+
+.text-gradient {
+    background: linear-gradient(to right, var(--color-primary), var(--color-secondary));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* High Contrast & Glow Utilities */
+.text-glow {
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.3), 0 0 30px rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .text-glow {
+    text-shadow: 0 0 12px rgba(255, 255, 255, 0.6), 0 0 25px rgba(255, 255, 255, 0.2);
+}
+
+.text-pop {
+    color: white;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}

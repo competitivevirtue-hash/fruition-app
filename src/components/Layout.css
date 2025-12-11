@@ -1,0 +1,77 @@
+.app-layout {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--color-background);
+    color: var(--color-text);
+    overflow-x: hidden;
+}
+
+/* Sidebar Placeholder dimensions for non-mobile */
+@media (min-width: 768px) {
+    .app-sidebar {
+        width: 280px;
+        flex-shrink: 0;
+    }
+}
+
+.main-content-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    max-width: 100%;
+    /* overflow-y: auto; handled by browser window usually, but good to keep in mind */
+}
+
+/* Mobile Header (Only visible on mobile) */
+.mobile-header {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    background: var(--color-surface-transparent);
+    backdrop-filter: blur(10px);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+@media (max-width: 768px) {
+    .app-layout {
+        flex-direction: column;
+    }
+
+    .mobile-header {
+        display: flex;
+    }
+
+    /* On mobile, sidebar is hidden/overlay */
+    .app-sidebar {
+        display: none;
+        /* Controlled by Sidebar.jsx state */
+    }
+}
+
+.container {
+    width: 100%;
+    max-width: 1400px;
+    /* Wider for dashboard view */
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Utility for glass panels */
+.glass-panel {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+}
+
+.text-gradient {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}

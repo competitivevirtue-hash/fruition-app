@@ -1,0 +1,206 @@
+/* Modal Overlay & Content */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    /* Ensure it's above everything */
+    padding: var(--spacing-sm);
+}
+
+.modal-content {
+    width: 100%;
+    max-width: 500px;
+    height: 90vh;
+    /* Fixed height relative to viewport */
+    max-height: 800px;
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    position: relative;
+    display: flex;
+    /* Use flex to manage header/body/footer */
+    flex-direction: column;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.close-btn {
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+    background: rgba(0, 0, 0, 0.4);
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 50%;
+    z-index: 20;
+    transition: all 0.2s;
+}
+
+.close-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Header - Compact */
+.modal-header {
+    flex-shrink: 0;
+    /* Prevents header from shrinking */
+    position: relative;
+    height: 160px;
+    /* Reduced height */
+}
+
+.modal-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.modal-image::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 80%;
+    background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.8));
+    pointer-events: none;
+}
+
+.modal-title-container {
+    position: absolute;
+    bottom: var(--spacing-sm);
+    left: var(--spacing-md);
+    right: var(--spacing-md);
+}
+
+.modal-title {
+    font-size: 1.75rem;
+    margin-bottom: 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.scientific-name {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.modal-badges {
+    margin-top: 0.5rem;
+    gap: 0.4rem;
+}
+
+.badge {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+/* Body - Scrollable */
+.modal-body {
+    flex: 1;
+    /* Takes remaining space */
+    overflow-y: auto;
+    /* Scrolls internally */
+    padding: var(--spacing-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+/* Info Grid - 2 Column Layout */
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-sm);
+}
+
+.info-grid .info-section {
+    height: 100%;
+}
+
+.full-width {
+    grid-column: span 2;
+}
+
+.info-section {
+    padding: 0.75rem;
+    gap: 0.75rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-md);
+    align-items: flex-start;
+}
+
+.section-icon {
+    padding-top: 2px;
+}
+
+.section-content h3 {
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+    color: var(--color-primary);
+}
+
+.section-content p {
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+/* Tags */
+.use-case-tags {
+    gap: 0.4rem;
+}
+
+.use-case-tag {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+}
+
+/* Stats */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.stat-pill {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 6px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.stat-key {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+}
+
+.stat-value {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+/* Footer - Fixed at bottom of modal */
+.modal-footer {
+    flex-shrink: 0;
+    padding: var(--spacing-md);
+    background: var(--color-surface);
+    /* Solid background to cover scroll */
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
