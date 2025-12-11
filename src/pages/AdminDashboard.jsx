@@ -4,8 +4,9 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { db } from '../firebase';
 import { collection, query, where, getDocs, updateDoc, doc, getCountFromServer, limit, orderBy } from 'firebase/firestore';
 import { motion } from 'framer-motion';
-import { Users, Search, Shield, AlertTriangle, Ban, CheckCircle, Activity, Lock, ChevronLeft, Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import AdminWorldMap from '../components/AdminWorldMap';
+import { Users, Search, Shield, AlertTriangle, Ban, CheckCircle, Activity, Lock, ChevronLeft, Bell, Globe } from 'lucide-react';
 
 const AdminDashboard = () => {
     const { currentUser, isAdmin } = useAuth();
@@ -15,6 +16,7 @@ const AdminDashboard = () => {
     const [loading, setLoading] = useState(false);
     const [stats, setStats] = useState({ totalUsers: 0, founders: 1, status: 'Operational' });
     const [selectedUser, setSelectedUser] = useState(null);
+    const [showMap, setShowMap] = useState(false);
 
     const [showSafeMode, setShowSafeMode] = useState(true); // Prevents accidental self-bans
 
@@ -193,14 +195,35 @@ const AdminDashboard = () => {
                         <CheckCircle size={20} /> {stats.status}
                     </div>
                 </div>
-                <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: '20px', background: 'var(--glass-background)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div
+                    className="glass-panel"
+                    onClick={() => setShowMap(true)}
+                    style={{
+                        padding: '1.5rem',
+                        borderRadius: '20px',
+                        background: 'var(--glass-background)',
+                        border: '1px solid rgba(255,255,255,0.05)',
+                        cursor: 'pointer',
+                        transition: 'transform 0.2s',
+                        ':hover': { transform: 'scale(1.02)' }
+                    }}
+                >
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
                         <span style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Active (24h)</span>
                         <Activity size={20} color="#f59e0b" />
                     </div>
                     <div className="text-glow" style={{ fontSize: '2.5rem', fontWeight: '800', color: 'var(--color-text)' }}>{stats?.activeToday || 0}</div>
+                    <div style={{ fontSize: '0.75rem', color: '#f59e0b', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Globe size={12} /> View Live Map
+                    </div>
                 </div>
             </div>
+
+            <AdminWorldMap
+                isOpen={showMap}
+                onClose={() => setShowMap(false)}
+                activeUserCount={stats?.activeToday || 0}
+            />
 
             {/* User Management Section */}
             <div className="glass-panel" style={{ padding: '2rem', borderRadius: '24px' }}>

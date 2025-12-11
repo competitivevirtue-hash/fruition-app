@@ -8,7 +8,6 @@ import { useAuth } from '../context/AuthContext';
 import { useFruit } from '../context/FruitContext.jsx';
 import HistoryView from './HistoryView';
 import './BioModal.css';
-import { Home } from 'lucide-react'; // Ensure Home icon is available if not imported (it was imported in line 3 on original file? No, checks line 3: X, User, Settings... Wait, line 3 has many imports. I will verify if Home needs to be added or if check line 3. Line 3 in original file: import { X, User, Settings, LogOut, ChevronLeft, AlertTriangle, Mail, Shield, Lock, Clock, Globe } from 'lucide-react'; -- Home is missing.)
 
 const ProfileModal = ({ isOpen, onClose, onOpenHousehold }) => {
     const { currentUser, userProfile, logout, login, signup, deleteAccount, loginWithApple, claimFounderStatus, updateUserSettings, isAdmin, resetPassword } = useAuth();
