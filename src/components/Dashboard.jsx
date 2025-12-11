@@ -256,118 +256,119 @@ const Dashboard = () => {
                             </div>
                         </div>
                     </div>
-                    )
+                </div>
+            )
             }
 
-                    {
-                        currentView === 'my-fruits' && (
-                            <section className="fruit-section">
-                                <div className="section-header">
-                                    <h2 className="section-title">{t('myFruitBasket')}</h2>
-                                    {user && (
-                                        <button className="btn btn-primary" onClick={() => {
-                                            setAddFruitDate(null);
-                                            setIsAddFruitOpen(true);
-                                        }}>
-                                            <Plus size={18} style={{ marginRight: '0.5rem' }} />
-                                            {t('addFruit')}
-                                        </button>
-                                    )}
-                                </div>
-                                <div className="fruit-grid">
-                                    {fruits.map(fruit => (
-                                        <FruitCard
-                                            key={fruit.id}
-                                            fruit={fruit}
-                                            onDetails={() => setSelectedFruit(fruit)}
-                                            onConsume={(amount) => consumeFruit(fruit.id, amount)}
-                                            onDelete={removeFruit}
-                                        />
-                                    ))}
-                                </div>
-                                <FruitBasket fruits={fruits} />
-                            </section>
-                        )
-                    }
+            {
+                currentView === 'my-fruits' && (
+                    <section className="fruit-section">
+                        <div className="section-header">
+                            <h2 className="section-title">{t('myFruitBasket')}</h2>
+                            {user && (
+                                <button className="btn btn-primary" onClick={() => {
+                                    setAddFruitDate(null);
+                                    setIsAddFruitOpen(true);
+                                }}>
+                                    <Plus size={18} style={{ marginRight: '0.5rem' }} />
+                                    {t('addFruit')}
+                                </button>
+                            )}
+                        </div>
+                        <div className="fruit-grid">
+                            {fruits.map(fruit => (
+                                <FruitCard
+                                    key={fruit.id}
+                                    fruit={fruit}
+                                    onDetails={() => setSelectedFruit(fruit)}
+                                    onConsume={(amount) => consumeFruit(fruit.id, amount)}
+                                    onDelete={removeFruit}
+                                />
+                            ))}
+                        </div>
+                        <FruitBasket fruits={fruits} />
+                    </section>
+                )
+            }
 
-                    {
-                        currentView === 'calendar' && (
-                            <CalendarView onAddFruit={(date) => {
-                                setAddFruitDate(date);
-                                setIsAddFruitOpen(true);
-                            }} />
-                        )
-                    }
+            {
+                currentView === 'calendar' && (
+                    <CalendarView onAddFruit={(date) => {
+                        setAddFruitDate(date);
+                        setIsAddFruitOpen(true);
+                    }} />
+                )
+            }
 
-                    {
-                        currentView === 'fruitcyclopedia' && (
-                            <Fruitcyclopedia onFruitSelect={setSelectedFruit} />
-                        )
-                    }
+            {
+                currentView === 'fruitcyclopedia' && (
+                    <Fruitcyclopedia onFruitSelect={setSelectedFruit} />
+                )
+            }
 
-                    {
-                        currentView === 'reports' && (
-                            <ReportsView />
-                        )
-                    }
+            {
+                currentView === 'reports' && (
+                    <ReportsView />
+                )
+            }
 
-                    <FruitcyclopediaModal
-                        fruit={selectedFruit}
-                        onClose={() => setSelectedFruit(null)}
-                        onAddToBasket={(name) => {
-                            setPrefillFruitName(name);
-                            setSelectedFruit(null);
-                            setAddFruitDate(null);
-                            setIsAddFruitOpen(true);
-                        }}
-                    />
+            <FruitcyclopediaModal
+                fruit={selectedFruit}
+                onClose={() => setSelectedFruit(null)}
+                onAddToBasket={(name) => {
+                    setPrefillFruitName(name);
+                    setSelectedFruit(null);
+                    setAddFruitDate(null);
+                    setIsAddFruitOpen(true);
+                }}
+            />
 
-                    <SettingsModal
-                        isOpen={isSettingsOpen}
-                        onClose={() => setIsSettingsOpen(false)}
-                        currentTheme={theme}
-                        onThemeChange={setTheme}
-                        currentLanguage={language}
-                        onLanguageChange={setLanguage}
-                    />
+            <SettingsModal
+                isOpen={isSettingsOpen}
+                onClose={() => setIsSettingsOpen(false)}
+                currentTheme={theme}
+                onThemeChange={setTheme}
+                currentLanguage={language}
+                onLanguageChange={setLanguage}
+            />
 
-                    <AddFruitModal
-                        isOpen={isAddFruitOpen}
-                        onClose={() => {
-                            setIsAddFruitOpen(false);
-                            setPrefillFruitName('');
-                        }}
-                        initialDate={addFruitDate}
-                        initialFruitName={prefillFruitName}
-                    />
+            <AddFruitModal
+                isOpen={isAddFruitOpen}
+                onClose={() => {
+                    setIsAddFruitOpen(false);
+                    setPrefillFruitName('');
+                }}
+                initialDate={addFruitDate}
+                initialFruitName={prefillFruitName}
+            />
 
-                    <ProfileModal
-                        isOpen={isProfileOpen}
-                        onClose={() => setIsProfileOpen(false)}
-                        onOpenHousehold={() => {
-                            setIsProfileOpen(false);
-                            setIsHouseholdModalOpen(true);
-                        }}
-                    />
+            <ProfileModal
+                isOpen={isProfileOpen}
+                onClose={() => setIsProfileOpen(false)}
+                onOpenHousehold={() => {
+                    setIsProfileOpen(false);
+                    setIsHouseholdModalOpen(true);
+                }}
+            />
 
-                    <HouseholdModal
-                        isOpen={isHouseholdModalOpen}
-                        onClose={() => setIsHouseholdModalOpen(false)}
-                    />
+            <HouseholdModal
+                isOpen={isHouseholdModalOpen}
+                onClose={() => setIsHouseholdModalOpen(false)}
+            />
 
-                    <RecipeModal
-                        isOpen={isRecipeModalOpen}
-                        onClose={() => setIsRecipeModalOpen(false)}
-                        recipe={generatedRecipe}
-                        loading={recipeLoading}
-                    />
+            <RecipeModal
+                isOpen={isRecipeModalOpen}
+                onClose={() => setIsRecipeModalOpen(false)}
+                recipe={generatedRecipe}
+                loading={recipeLoading}
+            />
 
-                    <StatsModal
-                        isOpen={isStatsOpen}
-                        onClose={() => setIsStatsOpen(false)}
-                    />
-                </Layout >
-            );
+            <StatsModal
+                isOpen={isStatsOpen}
+                onClose={() => setIsStatsOpen(false)}
+            />
+        </Layout >
+    );
 }
 
-            export default Dashboard;
+export default Dashboard;
