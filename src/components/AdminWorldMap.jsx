@@ -1,4 +1,3 @@
-```javascript
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { X, Globe, Radio, Navigation } from 'lucide-react';
@@ -21,7 +20,7 @@ const AdminWorldMap = ({ isOpen, onClose }) => {
                     const loc = { lat: latitude, lng: longitude };
                     setMyLocation(loc);
                     // Push live location to Firestore
-                    updateLastActive(loc); 
+                    updateLastActive(loc);
                 },
                 (error) => console.error("GPS Error:", error)
             );
@@ -31,7 +30,7 @@ const AdminWorldMap = ({ isOpen, onClose }) => {
     // 2. Fetch ALL Active Users from DB
     useEffect(() => {
         if (!isOpen) return;
-        
+
         const fetchUsers = async () => {
             try {
                 // Determine "Active" as last 24 hours for now (to ensure we see dots)
@@ -42,12 +41,12 @@ const AdminWorldMap = ({ isOpen, onClose }) => {
                     where('lastActive', '>', yesterday),
                     limit(50)
                 );
-                
+
                 const snapshot = await getDocs(q);
                 const users = snapshot.docs
                     .map(doc => ({ id: doc.id, ...doc.data() }))
                     .filter(u => u.location); // Only users with location data
-                
+
                 setActiveUsers(users);
             } catch (err) {
                 console.error("Error fetching map data:", err);
@@ -70,7 +69,7 @@ const AdminWorldMap = ({ isOpen, onClose }) => {
         // Ensure lat/lng are numbers
         const l = parseFloat(lat);
         const ln = parseFloat(lng);
-        
+
         return {
             x: (ln + 180) * (100 / 360),
             y: (90 - l) * (100 / 180)
@@ -113,8 +112,8 @@ const AdminWorldMap = ({ isOpen, onClose }) => {
                         <div>
                             <h2 style={{ fontSize: '1.2rem', margin: 0, color: 'white' }}>Live Network Activity</h2>
                             <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <Radio size={12} className="pulse-text" /> 
-                                {loading ? "Scanning Network..." : `Tracking ${ activeUsers.length } Active Nodes`}
+                                <Radio size={12} className="pulse-text" />
+                                {loading ? "Scanning Network..." : `Tracking ${activeUsers.length} Active Nodes`}
                             </p>
                         </div>
                     </div>
@@ -124,21 +123,21 @@ const AdminWorldMap = ({ isOpen, onClose }) => {
                 </div>
 
                 {/* Map Container */}
-                <div style={{ 
-                    flex: 1, 
-                    position: 'relative', 
-                    background: '#050505', 
+                <div style={{
+                    flex: 1,
+                    position: 'relative',
+                    background: '#050505',
                     overflow: 'hidden',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center'
                 }}>
                     {/* The Map Image - MUST be Standard 2:1 Equirectangular */}
-                    <div style={{ 
-                        position: 'relative', 
-                        width: '100%', 
-                        maxWidth: '1000px', 
-                        aspectRatio: '2/1', 
+                    <div style={{
+                        position: 'relative',
+                        width: '100%',
+                        maxWidth: '1000px',
+                        aspectRatio: '2/1',
                         margin: '0 auto',
                         backgroundImage: 'url(https://upload.wikimedia.org/wikipedia/commons/e/ea/Equirectangular-projection.jpg)',
                         backgroundSize: 'cover',
@@ -146,15 +145,15 @@ const AdminWorldMap = ({ isOpen, onClose }) => {
                     }}>
                         {/* Dark Overlay to make it look "Cyber" */}
                         <div style={{ position: 'absolute', inset: 0, background: '#000', opacity: 0.8 }} />
-                        
+
                         {/* Border Overlay (Optional, if matching projection) */}
                         {/* Keeping it simple: Background Image + Dots. The Wikimedia image is standard Equirectangular. */}
 
                         {/* Grid Lines */}
-                        <div style={{ 
-                            position: 'absolute', 
-                            inset: 0, 
-                            backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)', 
+                        <div style={{
+                            position: 'absolute',
+                            inset: 0,
+                            backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
                             backgroundSize: '16.66% 33.33%', // 60x60 degree blocks roughly
                             pointerEvents: 'none',
                             opacity: 0.3
@@ -164,19 +163,19 @@ const AdminWorldMap = ({ isOpen, onClose }) => {
                         {activeUsers.map(user => {
                             const { x, y } = project(user.location.lat, user.location.lng);
                             const isMe = myLocation && Math.abs(user.location.lat - myLocation.lat) < 0.01 && Math.abs(user.location.lng - myLocation.lng) < 0.01;
-                            
+
                             return (
                                 <div
                                     key={user.id}
                                     style={{
                                         position: 'absolute',
-                                        left: `${ x }% `,
-                                        top: `${ y }% `,
+                                        left: `${x}% `,
+                                        top: `${y}% `,
                                         transform: 'translate(-50%, -50%)',
                                         zIndex: isMe ? 20 : 10
                                     }}
                                 >
-                                    <div className={`map - user - dot ${ isMe ? 'is-me' : '' } `}>
+                                    <div className={`map - user - dot ${isMe ? 'is-me' : ''} `}>
                                         <div className="dot-core" />
                                         <div className="dot-ring" />
                                         {isMe && <div className="dot-radar" />}
@@ -204,7 +203,7 @@ const AdminWorldMap = ({ isOpen, onClose }) => {
                             border: '1px solid rgba(16,185,129,0.3)',
                             fontSize: '0.8rem'
                         }}>
-                             GPS: {myLocation.lat.toFixed(4)}, {myLocation.lng.toFixed(4)}
+                            GPS: {myLocation.lat.toFixed(4)}, {myLocation.lng.toFixed(4)}
                         </div>
                     )}
                 </div>
@@ -215,7 +214,7 @@ const AdminWorldMap = ({ isOpen, onClose }) => {
                         <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Active in last 24h</div>
                         <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#10b981' }}>{activeUsers.length}</div>
                     </div>
-                     <div>
+                    <div>
                         <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Global Status</div>
                         <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#10b981' }}>Connected</div>
                     </div>
@@ -293,4 +292,3 @@ const AdminWorldMap = ({ isOpen, onClose }) => {
 };
 
 export default AdminWorldMap;
-```

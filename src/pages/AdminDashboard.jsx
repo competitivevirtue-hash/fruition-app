@@ -232,12 +232,12 @@ const AdminDashboard = () => {
                 </h2>
 
                 {/* Search Bar */}
-                <form onSubmit={handleSearch} style={{ marginBottom: '2rem', display: 'flex', gap: '1rem' }}>
-                    <div style={{ position: 'relative', flex: 1 }}>
+                <form onSubmit={handleSearch} style={{ marginBottom: '2rem', display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div style={{ position: 'relative', flex: '1 1 250px' }}>
                         <Search size={20} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
                         <input
                             type="text"
-                            placeholder="Search users by email... (Leave empty to see banned users)"
+                            placeholder="Search users..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             style={{
@@ -256,7 +256,7 @@ const AdminDashboard = () => {
                         type="submit"
                         disabled={loading}
                         className="btn btn-primary"
-                        style={{ padding: '0 2.5rem', borderRadius: '16px', fontWeight: 'bold' }}
+                        style={{ padding: '16px 2.5rem', borderRadius: '16px', fontWeight: 'bold', flex: '0 1 auto' }}
                     >
                         {loading ? 'Scanning...' : 'Search'}
                     </button>

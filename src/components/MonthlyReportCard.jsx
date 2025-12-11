@@ -126,14 +126,23 @@ const MonthlyReportCard = ({ data, id }) => {
                         const isConsumed = item.type === 'consumed';
 
                         return (
-                            <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '12px', borderRadius: '12px', background: isConsumed ? 'rgba(74, 222, 128, 0.03)' : 'rgba(248, 113, 113, 0.03)', border: '1px solid rgba(255,255,255,0.03)' }}>
-                                <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', width: '60px', textAlign: 'right', fontWeight: 600 }}>
+                            <div key={idx} style={{
+                                display: 'flex',
+                                flexWrap: 'wrap', // Allow wrapping on small screens
+                                alignItems: 'center',
+                                gap: '0.8rem',
+                                padding: '12px',
+                                borderRadius: '12px',
+                                background: isConsumed ? 'rgba(74, 222, 128, 0.03)' : 'rgba(248, 113, 113, 0.03)',
+                                border: '1px solid rgba(255,255,255,0.03)'
+                            }}>
+                                <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', width: '40px', textAlign: 'right', fontWeight: 600 }}>
                                     {date.getDate()}/{date.getMonth() + 1}
                                 </div>
                                 <div style={{ width: '32px', height: '32px', borderRadius: '8px', overflow: 'hidden', background: 'rgba(255,255,255,0.1)', padding: '4px' }}>
                                     <img src={getFruitImage(item.fruitName || item.name)} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                                 </div>
-                                <div style={{ flex: 1 }}>
+                                <div style={{ flex: '1 1 auto', minWidth: '100px' }}>
                                     <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>{formatFruitName(item.fruitName || item.name)}</div>
                                 </div>
                                 <div style={{
@@ -142,7 +151,8 @@ const MonthlyReportCard = ({ data, id }) => {
                                     fontSize: '0.75rem',
                                     fontWeight: 'bold',
                                     color: isConsumed ? '#4ADE80' : '#F87171',
-                                    background: isConsumed ? 'rgba(74, 222, 128, 0.1)' : 'rgba(248, 113, 113, 0.1)'
+                                    background: isConsumed ? 'rgba(74, 222, 128, 0.1)' : 'rgba(248, 113, 113, 0.1)',
+                                    whiteSpace: 'nowrap'
                                 }}>
                                     {isConsumed ? 'CONSUMED' : 'WASTED'} ({item.amount})
                                 </div>
