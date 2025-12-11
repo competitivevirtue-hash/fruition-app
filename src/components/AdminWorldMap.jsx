@@ -72,22 +72,22 @@ const AdminWorldMap = ({ isOpen, onClose, activeUserCount }) => {
                     <div style={{ position: 'relative', width: '100%', height: '100%', maxWidth: '800px', maxHeight: '500px' }}>
                         {/* We use a background image or a constructed SVG. Since we don't have an asset, let's build a "Cyber Grid" map */}
                         <svg viewBox="0 0 1000 500" style={{ width: '100%', height: '100%', filter: 'drop-shadow(0 0 10px rgba(16, 185, 129, 0.2))' }}>
-                            {/* Abstract Continents (Cyber Style) */}
-                            <path
-                                d="M150,150 Q200,100 250,150 T350,150 T450,150"
-                                stroke="rgba(255,255,255,0.1)" strokeWidth="2" fill="none"
-                            />
-                            {/* Since I don't have a perfect world map path on hand, I will simulate it with a sophisticated grid of "Nodes" 
-                                 that light up. This fits the "Admin Nexus" theme better than a poorly drawn map.
-                             */}
+                            {/* Cyber-Grid Overlay (Subtle) */}
                             <defs>
                                 <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-                                    <circle cx="1" cy="1" r="1" fill="rgba(255,255,255,0.1)" />
+                                    <circle cx="1" cy="1" r="1" fill="rgba(255,255,255,0.05)" />
                                 </pattern>
                             </defs>
                             <rect width="100%" height="100%" fill="url(#grid)" />
 
-                            {/* "Continents" defined by denser clusters of dots opacity - simulated via a mask or just placing the user dots */}
+                            {/* Actual World Map Path */}
+                            <path
+                                d={WORLD_MAP_PATH}
+                                fill="rgba(16, 185, 129, 0.1)"
+                                stroke="rgba(16, 185, 129, 0.3)"
+                                strokeWidth="0.5"
+                                style={{ filter: 'drop-shadow(0 0 10px rgba(16, 185, 129, 0.2))' }}
+                            />
                         </svg>
 
                         {/* User Dots */}
