@@ -120,7 +120,7 @@ const MonthlyReportCard = ({ data, id }) => {
                     <Leaf size={16} /> Daily Activity Log
                 </h4>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', maxHeight: '300px', overflowY: 'auto', paddingRight: '4px' }}>
                     {sortedItems.length > 0 ? sortedItems.map((item, idx) => {
                         const date = new Date(item.timestamp || item.consumedAt || item.wasteDate || item.date);
                         const isConsumed = item.type === 'consumed';

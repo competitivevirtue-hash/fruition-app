@@ -432,7 +432,7 @@ const AddFruitModal = ({ isOpen, onClose, initialDate, initialFruitName }) => {
                                             }}
                                             style={{ accentColor: 'var(--color-primary)', width: '16px', height: '16px' }}
                                         />
-                                        <label htmlFor="boughtToday" style={{ color: 'var(--color-text)', fontSize: '0.9rem', cursor: 'pointer' }}>Bought Today</label>
+                                        <label htmlFor="boughtToday" style={{ color: '#ffffff', fontSize: '0.9rem', cursor: 'pointer', fontWeight: 600 }}>Bought Today</label>
                                     </div>
 
                                     {!boughtToday && (
