@@ -22,8 +22,15 @@ const SearchBar = ({ onFruitSelect, onSparkleClick }) => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    const [showSmartAction, setShowSmartAction] = useState(false);
+
     const handleSearch = async (val) => {
         setQuery(val);
+
+        // Smart Detection: If length > 15 and contains "bought" or numbers, suggest Smart Add
+        const isSentence = val.length > 10 && (/\d/.test(val) || val.includes(' '));
+        setShowSmartAction(isSentence);
+
         if (val.length > 0) {
             setIsLoading(true);
             setShowResults(true);
@@ -40,26 +47,38 @@ const SearchBar = ({ onFruitSelect, onSparkleClick }) => {
         } else {
             setResults([]);
             setShowResults(false);
+            setShowSmartAction(false);
         }
     };
 
+    // ... existing return ...
+
     return (
         <div className="search-bar-container" ref={searchRef} style={{ position: 'relative', width: '100%', maxWidth: '600px', margin: '0 auto' }}>
+            {/* Input Wrapper */}
             <div className="search-input-wrapper glass-panel" style={{
                 display: 'flex',
                 alignItems: 'center',
                 padding: '12px 20px',
                 borderRadius: '50px',
-                border: '1px solid rgba(255,255,255,0.1)',
+                border: showSmartAction ? '1px solid var(--color-primary)' : '1px solid rgba(255,255,255,0.1)',
                 background: 'rgba(255,255,255,0.05)',
-                transition: 'all 0.3s ease'
+                transition: 'all 0.3s ease',
+                boxShadow: showSmartAction ? '0 0 15px rgba(16, 185, 129, 0.2)' : 'none'
             }}>
                 <Search size={20} style={{ color: 'var(--color-primary)', marginRight: '12px' }} />
                 <input
                     type="text"
                     value={query}
                     onChange={(e) => handleSearch(e.target.value)}
-                    placeholder="Ask Fruition..."
+                    placeholder={showSmartAction ? "Press Enter to Smart Add..." : "Ask Fruition or type 'I bought...'"}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' && showSmartAction && onSparkleClick) {
+                            // repurposing onSparkleClick or adding new prop? 
+                            // Let's assume onSmartAdd is passed or we pass specialized object to onFruitSelect
+                            if (onFruitSelect) onFruitSelect({ type: 'smart_entry', text: query });
+                        }
+                    }}
                     style={{
                         background: 'transparent',
                         border: 'none',
@@ -86,7 +105,41 @@ const SearchBar = ({ onFruitSelect, onSparkleClick }) => {
             </div>
 
             <AnimatePresence>
-                {showResults && results.length > 0 && (
+                {/* Smart Action Hint */}
+                {showSmartAction && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => {
+                            if (onFruitSelect) onFruitSelect({ type: 'smart_entry', text: query });
+                            setQuery('');
+                            setShowResults(false);
+                        }}
+                        style={{
+                            position: 'absolute',
+                            top: 'calc(100% + 10px)',
+                            left: 0, right: 0,
+                            background: 'linear-gradient(90deg, #10b981 0%, #059669 100%)',
+                            padding: '12px',
+                            borderRadius: '12px',
+                            cursor: 'pointer',
+                            zIndex: 101,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '8px',
+                            boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)',
+                            color: 'white',
+                            fontWeight: 600
+                        }}
+                    >
+                        <Sparkles size={18} />
+                        Smart Add: "{query.length > 30 ? query.substring(0, 30) + '...' : query}"
+                    </motion.div>
+                )}
+
+                {showResults && results.length > 0 && !showSmartAction && (
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}

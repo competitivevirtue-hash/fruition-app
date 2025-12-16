@@ -12,6 +12,7 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc, runTransaction, serverTimestamp, collection, query, where, getDocs, arrayUnion, arrayRemove, deleteField } from 'firebase/firestore';
 import { auth, db } from '../firebase';
+import { secureLog, LOG_LEVELS, EVENT_TYPES } from '../services/Logger';
 
 import LoadingSplash from '../components/LoadingSplash';
 
@@ -153,39 +154,70 @@ export function AuthProvider({ children }) {
         }
     }
 
-    function signup(email, password, name) {
-        return createUserWithEmailAndPassword(auth, email, password)
-            .then((userCredential) => {
-                // Update profile with name
-                return updateProfile(userCredential.user, {
-                    displayName: name
-                });
-            });
+    async function signup(email, password, name) {
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            await updateProfile(userCredential.user, { displayName: name });
+
+            await secureLog(`New User Signup: ${email}`, { uid: userCredential.user.uid, name }, LOG_LEVELS.INFO, EVENT_TYPES.AUTH);
+            return userCredential;
+        } catch (error) {
+            await secureLog(`Signup Failed: ${email}`, { error: error.message, code: error.code }, LOG_LEVELS.ERROR, EVENT_TYPES.AUTH);
+            throw error;
+        }
     }
 
-    function login(email, password) {
-        return signInWithEmailAndPassword(auth, email, password);
+    async function login(email, password) {
+        try {
+            const result = await signInWithEmailAndPassword(auth, email, password);
+            // Log success is handled by onAuthStateChanged essentially, but explicit log helps track "Login Attempt Success"
+            await secureLog(`User Login: ${email}`, { uid: result.user.uid }, LOG_LEVELS.INFO, EVENT_TYPES.AUTH);
+            return result;
+        } catch (error) {
+            await secureLog(`Login Failed: ${email}`, { error: error.message, code: error.code }, LOG_LEVELS.WARN, EVENT_TYPES.AUTH);
+            throw error;
+        }
     }
 
     function logout() {
+        if (currentUser) {
+            secureLog(`User Logged Out: ${currentUser.email}`, { uid: currentUser.uid }, LOG_LEVELS.INFO, EVENT_TYPES.AUTH);
+        }
         return signOut(auth).then(() => {
             setUserProfile(null);
         });
     }
 
     function deleteAccount() {
+        const uid = auth.currentUser?.uid;
+        const email = auth.currentUser?.email;
         return deleteUser(auth.currentUser).then(() => {
+            secureLog(`Account Deleted: ${email}`, { uid }, LOG_LEVELS.CRITICAL, EVENT_TYPES.SECURITY);
             setUserProfile(null);
         });
     }
 
-    function loginWithApple() {
-        const provider = new OAuthProvider('apple.com');
-        return signInWithPopup(auth, provider);
+    async function loginWithApple() {
+        try {
+            const provider = new OAuthProvider('apple.com');
+            const result = await signInWithPopup(auth, provider);
+            await secureLog(`Apple Sign In Success`, { uid: result.user.uid, email: result.user.email }, LOG_LEVELS.INFO, EVENT_TYPES.AUTH);
+            return result;
+        } catch (error) {
+            console.error("Apple Sign In Error:", error);
+            await secureLog(`Apple Sign In Failed`, { error: error.message, code: error.code }, LOG_LEVELS.ERROR, EVENT_TYPES.AUTH);
+            throw error;
+        }
     }
 
-    function resetPassword(email) {
-        return sendPasswordResetEmail(auth, email);
+    async function resetPassword(email) {
+        try {
+            await sendPasswordResetEmail(auth, email);
+            await secureLog(`Password Reset Requested: ${email}`, {}, LOG_LEVELS.INFO, EVENT_TYPES.AUTH);
+        } catch (error) {
+            await secureLog(`Password Reset Failed: ${email}`, { error: error.message }, LOG_LEVELS.WARN, EVENT_TYPES.AUTH);
+            throw error;
+        }
     }
 
     async function updateUserSettings(settings) {
@@ -200,17 +232,25 @@ export function AuthProvider({ children }) {
             return true;
         } catch (error) {
             console.error("Error updating user settings:", error);
+            await secureLog(`Update Settings Failed`, { uid: currentUser.uid, error: error.message }, LOG_LEVELS.ERROR, EVENT_TYPES.SYSTEM);
             return false;
         }
     }
 
-    async function updateLastActive() {
+    async function updateLastActive(locationPayload = null) {
         if (!currentUser) return;
         const userRef = doc(db, 'users', currentUser.uid);
         try {
-            await updateDoc(userRef, {
+            const updateData = {
                 lastActive: serverTimestamp()
-            });
+            };
+
+            // If we have precise GPS from the map, map it to the user object
+            if (locationPayload) {
+                updateData.location = locationPayload;
+            }
+
+            await updateDoc(userRef, updateData);
         } catch (error) {
             console.warn("Error updating presence:", error);
         }

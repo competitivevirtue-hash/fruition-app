@@ -17,6 +17,7 @@ const AddFruitModal = ({ isOpen, onClose, initialDate, initialFruitName }) => {
         name: initialFruitName || '',
         quantity: 1,
         unit: 'Pieces',
+        storageMethod: 'Counter',
         purchaseDate: initialDate ? new Date(initialDate) : new Date()
     });
     const [showCalendar, setShowCalendar] = useState(false);
@@ -29,6 +30,8 @@ const AddFruitModal = ({ isOpen, onClose, initialDate, initialFruitName }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [typingTimeout, setTypingTimeout] = useState(null);
 
+    const [price, setPrice] = useState('');
+    const [expiryOverride, setExpiryOverride] = useState('');
 
     // Reset form when modal opens
     React.useEffect(() => {
@@ -41,8 +44,10 @@ const AddFruitModal = ({ isOpen, onClose, initialDate, initialFruitName }) => {
                 name: initialFruitName || '',
                 quantity: 1,
                 unit: 'Pieces',
+                storageMethod: 'Counter',
                 purchaseDate: dateToUse
             }));
+            setPrice(''); // Reset price
             setCurrentMonth(dateToUse);
             setBoughtToday(isDateToday);
             setShowCalendar(false);
@@ -70,29 +75,44 @@ const AddFruitModal = ({ isOpen, onClose, initialDate, initialFruitName }) => {
         const isFuture = purchaseDate > today;
         const status = isFuture ? 'Planned' : 'Active';
 
+        // Fetch Nutrition Data
+        let nutrition = null;
+        try {
+            nutrition = await fetchFruitNutrition(formData.name);
+        } catch (err) {
+            console.warn("Failed to fetch nutrition:", err);
+        }
+
         const newFruit = {
             name: normalizeFruitName(formData.name),
             image: 'https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?auto=format&fit=crop&q=80&w=500', // Placeholder
-            calories: 95, // Placeholder
+            calories: nutrition?.calories ? parseInt(nutrition.calories) : 95,
             fruitcyclopedia: {
-                vitaminC: 'Unknown',
-                fiber: 'Unknown',
+                vitaminC: nutrition?.vitaminC || 'Unknown',
+                fiber: nutrition?.fiber || 'Unknown',
                 antioxidants: 'Unknown'
             },
+            nutritionalInfo: nutrition, // Raw object for detailed reports
+            pricePerUnit: parseFloat(price) || 0, // Financial Tracking
             scientificFact: 'Information coming soon.',
             makeItPlain: 'We are still learning about this fruit.',
             freshness: 'Peak',
-            daysRemaining: 7, // Default
+            daysRemaining: expiryOverride
+                ? Math.ceil((new Date(expiryOverride) - new Date()) / (1000 * 60 * 60 * 24))
+                : 7, // Default if no override
             purchaseDate: purchaseDate.toISOString(),
             quantity: parseInt(formData.quantity),
             unit: formData.unit,
+            storageMethod: formData.storageMethod,
+            expiryDate: expiryOverride || null, // EXPLICIT OVERRIDE
             status: status
         };
 
         try {
             await addFruit(newFruit);
             onClose();
-            setFormData({ name: '', quantity: 1, unit: 'Pieces', purchaseDate: new Date() });
+            setFormData({ name: '', quantity: 1, unit: 'Pieces', storageMethod: 'Counter', purchaseDate: new Date() });
+            setPrice('');
             setBoughtToday(true);
             setShowCalendar(false);
         } catch (error) {
@@ -324,6 +344,69 @@ const AddFruitModal = ({ isOpen, onClose, initialDate, initialFruitName }) => {
                                 )}
                             </div>
 
+                            {/* EXPIRE OVERRIDE - NEW FEATURE */}
+                            <div className="form-group">
+                                <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>Expires On (Optional)</label>
+                                <input
+                                    type="date"
+                                    onChange={(e) => {
+                                        // Store this override separately or just use it to calc daysRemaining immediately
+                                        // For simplicity, let's keep it in local state `expiryOverride`
+                                        setExpiryOverride(e.target.value);
+                                    }}
+                                    style={{
+                                        width: '100%',
+                                        padding: '12px',
+                                        background: 'rgba(255, 255, 255, 0.08)',
+                                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                                        borderRadius: '8px',
+                                        color: '#fff',
+                                        fontSize: '1rem',
+                                        outline: 'none',
+                                        boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.2)'
+                                    }}
+                                />
+                                <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', marginTop: '4px' }}>
+                                    Leave blank to use smart expiry estimates.
+                                </div>
+                            </div>
+
+
+
+                            {/* STORAGE METHOD SELECTION */}
+                            <div className="form-group">
+                                <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>Where are you storing it?</label>
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                    {['Counter', 'Fridge', 'Pantry'].map(method => (
+                                        <button
+                                            key={method}
+                                            type="button"
+                                            onClick={() => setFormData({ ...formData, storageMethod: method })}
+                                            style={{
+                                                flex: 1,
+                                                padding: '10px',
+                                                borderRadius: '8px',
+                                                border: formData.storageMethod === method
+                                                    ? '1px solid var(--color-primary)'
+                                                    : '1px solid rgba(255,255,255,0.1)',
+                                                background: formData.storageMethod === method
+                                                    ? 'rgba(16, 185, 129, 0.2)'
+                                                    : 'rgba(255,255,255,0.05)',
+                                                color: formData.storageMethod === method ? '#fff' : 'rgba(255,255,255,0.6)',
+                                                cursor: 'pointer',
+                                                fontWeight: formData.storageMethod === method ? 600 : 400,
+                                                transition: 'all 0.2s'
+                                            }}
+                                        >
+                                            {method === 'Counter' && '🧺 '}
+                                            {method === 'Fridge' && '❄️ '}
+                                            {method === 'Pantry' && '🚪 '}
+                                            {method}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                                 <div className="form-group">
                                     <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>{t('quantity')}</label>
@@ -415,6 +498,32 @@ const AddFruitModal = ({ isOpen, onClose, initialDate, initialFruitName }) => {
                                     </div>
                                 </div>
 
+                                <div className="form-group">
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>Price (Optional)</label>
+                                    <div style={{ position: 'relative' }}>
+                                        <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.5)' }}>$</span>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            value={price}
+                                            onChange={(e) => setPrice(e.target.value)}
+                                            placeholder="0.00"
+                                            style={{
+                                                width: '100%',
+                                                padding: '12px 12px 12px 28px',
+                                                background: 'rgba(255, 255, 255, 0.08)',
+                                                border: '1px solid rgba(255, 255, 255, 0.2)',
+                                                borderRadius: '8px',
+                                                color: '#fff',
+                                                fontSize: '1rem',
+                                                outline: 'none',
+                                                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.2)'
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+
                                 <div className="form-group" style={{ position: 'relative' }}>
                                     <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>{t('purchaseDate')}</label>
 
@@ -477,8 +586,8 @@ const AddFruitModal = ({ isOpen, onClose, initialDate, initialFruitName }) => {
                         </form>
                     </div>
                 </motion.div>
-            </motion.div>
-        </AnimatePresence>
+            </motion.div >
+        </AnimatePresence >
     );
 };
 

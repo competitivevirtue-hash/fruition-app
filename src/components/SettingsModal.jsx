@@ -2,12 +2,19 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Moon, Sun, Monitor, Globe, Download, FileText, ChevronRight } from 'lucide-react';
 import { translations } from '../utils/translations';
+import { useNotifications } from '../context/NotificationContext';
 import './BioModal.css';
 
 const SettingsModal = ({ isOpen, onClose, currentTheme, onThemeChange, currentLanguage, onLanguageChange }) => {
     if (!isOpen) return null;
 
     const t = (key) => translations[currentLanguage]?.[key] || translations['en'][key];
+    const { preferences, setPreferences } = useNotifications();
+    const settingsPrefs = preferences || { notifyDaysBefore: [2], notifyOnExpiry: true }; // Fallback
+
+    const updatePrefs = (key, value) => {
+        setPreferences(prev => ({ ...prev, [key]: value }));
+    };
 
     const Section = ({ title, children }) => (
         <div style={{ marginBottom: '2rem' }}>

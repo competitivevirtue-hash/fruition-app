@@ -100,8 +100,14 @@ const ProfileModal = ({ isOpen, onClose, onOpenHousehold }) => {
             await loginWithApple();
             onClose();
         } catch (error) {
-            console.error("Error signing in with Apple:", error);
-            setError("Failed to sign in with Apple. Please try again.");
+            console.error("Apple Sign In Error:", error);
+            if (error.code === 'auth/operation-not-allowed') {
+                setError("Apple Sign In is not enabled. Please contact support.");
+            } else if (error.code === 'auth/popup-closed-by-user') {
+                // User closed popup, no error needed usually
+            } else {
+                setError("Failed to sign in with Apple. Please try again.");
+            }
         }
     };
 
@@ -117,7 +123,19 @@ const ProfileModal = ({ isOpen, onClose, onOpenHousehold }) => {
             }
             onClose();
         } catch (error) {
-            setError(error.message);
+            console.error("Auth Error:", error);
+            // Improving User Feedback
+            if (error.code === 'auth/email-already-in-use') {
+                setError("This email is already registered. Please log in.");
+            } else if (error.code === 'auth/weak-password') {
+                setError("Password is too weak. Please use at least 6 characters.");
+            } else if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                setError("Invalid email or password.");
+            } else if (error.code === 'auth/invalid-email') {
+                setError("Please enter a valid email address.");
+            } else {
+                setError("Authentication failed. Please try again.");
+            }
         }
         setLoading(false);
     };
@@ -576,16 +594,22 @@ const ProfileModal = ({ isOpen, onClose, onOpenHousehold }) => {
                                                 type="button"
                                                 onClick={async () => {
                                                     if (!email) {
-                                                        setError("Please enter your email address first.");
+                                                        setError("Please enter your email above to reset password.");
                                                         return;
                                                     }
                                                     try {
                                                         await resetPassword(email);
-                                                        alert(`Password reset email sent to ${email}`);
+                                                        alert(`Password reset email sent to ${email}. Please check your inbox.`);
                                                         setError('');
                                                     } catch (error) {
-                                                        console.error(error);
-                                                        setError("Failed to send reset email. " + error.message);
+                                                        console.error("Reset Password Error:", error);
+                                                        if (error.code === 'auth/user-not-found') {
+                                                            setError("No account found with this email.");
+                                                        } else if (error.code === 'auth/invalid-email') {
+                                                            setError("Invalid email address.");
+                                                        } else {
+                                                            setError("Failed to send reset email. " + error.message);
+                                                        }
                                                     }
                                                 }}
                                                 style={{ background: 'none', border: 'none', color: 'var(--color-primary)', fontSize: '0.85rem', cursor: 'pointer', textAlign: 'right', marginTop: '-0.5rem' }}

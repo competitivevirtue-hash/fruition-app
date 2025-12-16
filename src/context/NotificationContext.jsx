@@ -9,9 +9,17 @@ export const NotificationProvider = ({ children }) => {
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
 
-    // Load persisted notifications on mount
+    // Default Preferences: Notify 2 days before
+    const [preferences, setPreferences] = useState({
+        notifyDaysBefore: [2], // Default
+        notifyOnExpiry: true
+    });
+
+    // Load persisted data
     useEffect(() => {
         const saved = localStorage.getItem('fruition_notifications');
+        const savedPrefs = localStorage.getItem('fruition_notification_prefs');
+
         if (saved) {
             try {
                 const parsed = JSON.parse(saved);
@@ -22,17 +30,29 @@ export const NotificationProvider = ({ children }) => {
             }
         }
 
+        if (savedPrefs) {
+            try {
+                setPreferences(JSON.parse(savedPrefs));
+            } catch (e) { }
+        }
+
         if ('Notification' in window) {
             setPermission(Notification.permission);
         }
     }, []);
 
-    // Save to local storage whenever notifications change
+    // Save preferences
+    useEffect(() => {
+        localStorage.setItem('fruition_notification_prefs', JSON.stringify(preferences));
+    }, [preferences]);
+
+    // ... existing save effect ...
     useEffect(() => {
         localStorage.setItem('fruition_notifications', JSON.stringify(notifications));
         setUnreadCount(notifications.filter(n => !n.read).length);
     }, [notifications]);
 
+    // ... existing requestPermission ...
     const requestPermission = async () => {
         if (!('Notification' in window)) {
             alert("This browser does not support desktop notifications");
@@ -60,12 +80,13 @@ export const NotificationProvider = ({ children }) => {
         if (permission === 'granted' && document.hidden) {
             new Notification(title, {
                 body,
-                icon: '/pwa-192x192.png', // Assuming we have this, or fallback
+                icon: '/pwa-192x192.png',
                 badge: '/pwa-192x192.png'
             });
         }
     };
 
+    // ... existing markAsRead ...
     const markAsRead = (id) => {
         setNotifications(prev => prev.map(n =>
             n.id === id ? { ...n, read: true } : n
@@ -86,42 +107,43 @@ export const NotificationProvider = ({ children }) => {
     useEffect(() => {
         if (!fruits || fruits.length === 0) return;
 
-        // Run check every time 'fruits' data updates significantly, 
-        // OR we could run it on an interval. 
-        // Since 'fruits' updates from Firestore, let's trigger on change but debounce frequency.
-
         const checkExpiry = () => {
             const now = new Date();
             const lastCheck = localStorage.getItem('last_expiry_check');
 
-            // Limit checks to once per hour to avoid spamming on every minor DB update
+            // Debounce: Check only once per hour
             if (lastCheck && (now - new Date(lastCheck)) < 1000 * 60 * 60) {
                 return;
             }
 
-            let riskCount = 0;
             let expiredCount = 0;
 
             fruits.forEach(fruit => {
-                // Unique key for today's alert regarding this specific fruit
-                const alertKey = `alert_${fruit.id}_${new Date().toDateString()}`;
-                const alreadyAlerted = localStorage.getItem(alertKey);
+                const uniqueKeyBase = `alert_${fruit.id}_${now.toDateString()}`;
 
-                if (alreadyAlerted) return;
-
+                // 1. Check EXPIRED
                 if (fruit.daysRemaining <= 0 && fruit.status !== 'Planned') {
-                    expiredCount++;
-                    // Only alert if we haven't today
-                    // addNotification("Expired Item", `${fruit.name} has expired. Please log waste.`, 'danger');
-                    localStorage.setItem(alertKey, 'true');
-                } else if (fruit.daysRemaining <= 2 && fruit.daysRemaining > 0 && fruit.status !== 'Planned') {
-                    riskCount++;
-                    addNotification(
-                        "Eat Soon! ⏳",
-                        `Your ${fruit.name} expires in ${fruit.daysRemaining} days.`,
-                        'warning'
-                    );
-                    localStorage.setItem(alertKey, 'true');
+                    if (preferences.notifyOnExpiry) {
+                        const alertKey = `${uniqueKeyBase}_expired`;
+                        if (!localStorage.getItem(alertKey)) {
+                            expiredCount++; // Summarize later
+                            localStorage.setItem(alertKey, 'true');
+                        }
+                    }
+                }
+                // 2. Check WARNING DAYS
+                else if (fruit.daysRemaining > 0 && fruit.status !== 'Planned') {
+                    if (preferences.notifyDaysBefore.includes(fruit.daysRemaining)) {
+                        const alertKey = `${uniqueKeyBase}_warning_${fruit.daysRemaining}`;
+                        if (!localStorage.getItem(alertKey)) {
+                            addNotification(
+                                "Eat Soon! ⏳",
+                                `Your ${fruit.name} expires in ${fruit.daysRemaining} day${fruit.daysRemaining > 1 ? 's' : ''}.`,
+                                'warning'
+                            );
+                            localStorage.setItem(alertKey, 'true');
+                        }
+                    }
                 }
             });
 
@@ -133,11 +155,10 @@ export const NotificationProvider = ({ children }) => {
             localStorage.setItem('last_expiry_check', now.toISOString());
         };
 
-        // Initial Timeout to let app load, then check
         const timer = setTimeout(checkExpiry, 5000);
         return () => clearTimeout(timer);
 
-    }, [fruits, permission]);
+    }, [fruits, permission, preferences]);
 
 
     return (
@@ -149,7 +170,10 @@ export const NotificationProvider = ({ children }) => {
             markAsRead,
             markAllAsRead,
             clearAll,
-            addNotification // Exposed for manual triggers (e.g. Welcome message)
+            clearAll,
+            addNotification, // Exposed for manual triggers (e.g. Welcome message)
+            preferences,
+            setPreferences
         }}>
             {children}
         </NotificationContext.Provider>

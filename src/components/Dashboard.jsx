@@ -21,6 +21,8 @@ import RecipeModal from './RecipeModal';
 import StatsModal from './StatsModal';
 import ReportsView from './ReportsView';
 import HouseholdModal from './HouseholdModal';
+import BulkAddModal from './BulkAddModal';
+import { parseNaturalLanguageInput } from '../utils/smartParser';
 import NotificationBell from './NotificationBell';
 import './HouseholdModal.css';
 import { generateSmartRecipe } from '../utils/aiService';
@@ -63,8 +65,27 @@ const Dashboard = () => {
     // Household State
     const [isHouseholdModalOpen, setIsHouseholdModalOpen] = useState(false);
 
+    // Smart Entry State
+    const [isBulkAddOpen, setIsBulkAddOpen] = useState(false);
+    const [smartItems, setSmartItems] = useState([]);
+
     // Stats State
     const [isStatsOpen, setIsStatsOpen] = useState(false);
+
+    const handleFruitSelect = (selection) => {
+        if (selection.type === 'smart_entry') {
+            const parsed = parseNaturalLanguageInput(selection.text);
+            if (parsed.length > 0) {
+                setSmartItems(parsed);
+                setIsBulkAddOpen(true);
+            } else {
+                // Fallback if parser fails to find items but user meant it
+                alert("I couldn't quite catch the items. Try '3 apples' or 'a bag of oranges'.");
+            }
+        } else {
+            setSelectedFruit(selection);
+        }
+    };
 
     const handleGenerateRecipe = async () => {
         setIsRecipeModalOpen(true);
@@ -155,8 +176,9 @@ const Dashboard = () => {
                             <NotificationBell />
                         </div>
 
+
                         <div style={{ marginTop: '1.5rem', marginBottom: '1rem' }}>
-                            <SearchBar onFruitSelect={setSelectedFruit} onSparkleClick={handleGenerateRecipe} />
+                            <SearchBar onFruitSelect={handleFruitSelect} onSparkleClick={handleGenerateRecipe} />
                         </div>
 
                         <DashboardWidgets fruits={fruits} />
@@ -359,6 +381,12 @@ const Dashboard = () => {
             <HouseholdModal
                 isOpen={isHouseholdModalOpen}
                 onClose={() => setIsHouseholdModalOpen(false)}
+            />
+
+            <BulkAddModal
+                isOpen={isBulkAddOpen}
+                onClose={() => setIsBulkAddOpen(false)}
+                initialItems={smartItems}
             />
 
             <RecipeModal

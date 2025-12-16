@@ -205,58 +205,79 @@ export const formatFruitName = normalizeFruitName;
 // ---------------------------------------------------------
 // INTELLIGENT SHELF LIFE DATABASE (Days)
 // ---------------------------------------------------------
+// ---------------------------------------------------------
+// INTELLIGENT SHELF LIFE DATABASE (Days)
+// Structure: Default (Counter) | Fridge | Freezer (Optional)
+// ---------------------------------------------------------
 const SHELF_LIFE_DB = {
-    'apple': 14,
-    'apricot': 5,
-    'avocado': 3,
-    'banana': 5,
-    'blackberry': 2,
-    'blueberry': 5,
-    'cantaloupe': 5,
-    'cherry': 3,
-    'coconut': 14,
-    'cranberry': 14,
-    'date': 30, // dried usually, or fresh long lasting
-    'dragon fruit': 5,
-    'durian': 5,
-    'fig': 3,
-    'grape': 7,
-    'grapefruit': 14,
-    'guava': 3,
-    'honeydew': 5,
-    'kiwi': 7,
-    'lemon': 14,
-    'lime': 14,
-    'lychee': 3,
-    'mango': 5,
-    'melon': 5,
-    'nectarine': 4,
-    'orange': 14,
-    'papaya': 4,
-    'passion fruit': 7,
-    'peach': 4,
-    'pear': 5,
-    'persimmon': 5,
-    'pineapple': 3,
-    'plum': 4,
-    'pomegranate': 14,
-    'raspberry': 2,
-    'strawberry': 3,
-    'tangerine': 14,
-    'watermelon': 7
+    'apple': { default: 7, fridge: 28, pantry: 7 },
+    'apricot': { default: 3, fridge: 5 },
+    'avocado': { default: 3, fridge: 5 }, // Ripe
+    'banana': { default: 5, fridge: 9 }, // Skin goes black but inside good
+    'blackberry': { default: 1, fridge: 3 },
+    'blueberry': { default: 2, fridge: 7 },
+    'cantaloupe': { default: 3, fridge: 5 }, // Cut vs Whole? Assuming whole then cut
+    'cherry': { default: 2, fridge: 7 },
+    'coconut': { default: 14, fridge: 21 },
+    'cranberry': { default: 7, fridge: 21 },
+    'date': { default: 30, fridge: 60, pantry: 45 },
+    'dragon fruit': { default: 3, fridge: 5 },
+    'durian': { default: 2, fridge: 5 },
+    'fig': { default: 2, fridge: 5 },
+    'grape': { default: 2, fridge: 14 },
+    'grapefruit': { default: 7, fridge: 21 },
+    'guava': { default: 3, fridge: 5 },
+    'honeydew': { default: 3, fridge: 5 },
+    'kiwi': { default: 5, fridge: 14 },
+    'lemon': { default: 10, fridge: 21 },
+    'lime': { default: 10, fridge: 21 },
+    'lychee': { default: 2, fridge: 7 },
+    'mango': { default: 5, fridge: 7 },
+    'melon': { default: 5, fridge: 7 },
+    'nectarine': { default: 3, fridge: 5 },
+    'orange': { default: 7, fridge: 21 },
+    'papaya': { default: 3, fridge: 5 },
+    'passion fruit': { default: 7, fridge: 14 },
+    'peach': { default: 3, fridge: 5 },
+    'pear': { default: 4, fridge: 7 },
+    'persimmon': { default: 3, fridge: 7 },
+    'pineapple': { default: 2, fridge: 5 },
+    'plum': { default: 3, fridge: 5 },
+    'pomegranate': { default: 7, fridge: 21 },
+    'raspberry': { default: 1, fridge: 3 },
+    'strawberry': { default: 1, fridge: 5 },
+    'tangerine': { default: 7, fridge: 14 },
+    'watermelon': { default: 7, fridge: 10 }
 };
 
-export const getShelfLife = (fruitName) => {
-    if (!fruitName) return 7; // Default fallback
+export const getShelfLife = (fruitName, storageMethod = 'default') => {
+    if (!fruitName) return 7;
     const lowerName = fruitName.toLowerCase();
 
-    // Exact or partial match
-    // 1. Try exact key match (cleaned)
-    for (const [key, days] of Object.entries(SHELF_LIFE_DB)) {
-        if (lowerName.includes(key)) return days;
+    // 1. Find the entry
+    let entry = null;
+    for (const [key, data] of Object.entries(SHELF_LIFE_DB)) {
+        if (lowerName.includes(key)) {
+            entry = data;
+            break;
+        }
     }
 
-    return 7; // Default if unknown
+    if (!entry) return 7; // Unknown fruit default
+
+    // 2. Return specific method days or fallback to default
+    // Map 'Simple UI' to 'DB Keys'
+    const methodMap = {
+        'Counter': 'default',
+        'Pantry': 'pantry',
+        'Fridge': 'fridge',
+        'Freezer': 'freezer'
+    };
+
+    // Clean input
+    const methodKey = methodMap[storageMethod] || storageMethod || 'default';
+
+    return entry[methodKey] || entry['default'] || 7;
 };
 
 export const getRelativeTime = (dateString) => {

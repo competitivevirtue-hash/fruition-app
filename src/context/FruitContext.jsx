@@ -8,6 +8,7 @@ import { broadcastConsumption, broadcastWaste } from '../utils/feedUtils';
 
 const FruitContext = createContext();
 
+// Force Rebuild Check
 const initialState = {
     fruits: [],
     loading: false,
@@ -65,7 +66,7 @@ export const FruitProvider = ({ children }) => {
                     const fruitsData = snapshot.docs.map(doc => {
                         const data = doc.data();
 
-                        // --- INTELLIGENCE LOGIC ---
+                        // --- INTELLIGENCE LOGIC v2 ---
                         // 1. Determine Start Date (Purchase Date preferred, fallback to CreatedAt)
                         const startDate = new Date(data.purchaseDate || data.createdAt);
 
@@ -73,17 +74,24 @@ export const FruitProvider = ({ children }) => {
                         const diffTime = Math.abs(now - startDate);
                         const daysPassed = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-                        // 3. Get Shelf Life from Knowledge Base
-                        const shelfLife = getShelfLife(data.name);
+                        let daysRemaining;
 
-                        // 4. Calculate Remaining Life
-                        // If status is 'Planned', it doesn't expire yet.
-                        let daysRemaining = data.status === 'Planned' ? 7 : Math.max(0, shelfLife - daysPassed);
+                        // 3. PRIORITY 1: Manual Override
+                        if (data.expiryDate) {
+                            const expDate = new Date(data.expiryDate);
+                            const diffExp = expDate - now;
+                            daysRemaining = Math.ceil(diffExp / (1000 * 60 * 60 * 24));
+                        } else {
+                            // 4. PRIORITY 2: Smart Calculation
+                            // Get Shelf Life from Knowledge Base using Storage Method
+                            const shelfLife = getShelfLife(data.name, data.storageMethod || 'Counter');
+                            daysRemaining = data.status === 'Planned' ? 7 : Math.max(0, shelfLife - daysPassed);
+                        }
 
                         // 5. Determine Freshness Status
                         let freshness = 'Peak';
-                        if (daysRemaining <= 1) freshness = 'Expired'; // or Risk
-                        else if (daysRemaining <= 3) freshness = 'Risk';
+                        if (daysRemaining <= 0) freshness = 'Expired'; // Changed <=1 to <=0 for strictness
+                        else if (daysRemaining <= 2) freshness = 'Risk';
                         else if (daysRemaining <= 5) freshness = 'Good';
 
                         return {
@@ -199,11 +207,21 @@ export const FruitProvider = ({ children }) => {
         // For MVP: Log to User's CONSUMED collection so "Reports" still work for the user.
         // We can ALSO log to household if we want shared stats later.
         const consumedPath = `users/${currentUser.uid}/consumed`;
+
+        // Calculate price for THIS portion (simple linear calc)
+        // If I ate 1 apple and pricePerUnit was $0.50, then I consumed $0.50 worth.
+        const pricePerUnit = fruit.pricePerUnit || 0;
+        const valueConsumed = pricePerUnit * amount;
+
         await addDoc(collection(db, consumedPath), {
             fruitName: fruit.name,
             amount: amount,
             consumedAt: new Date().toISOString(),
-            householdId: userProfile?.householdId || null
+            householdId: userProfile?.householdId || null,
+            // Track Financial & Nutritional Data for Year-End Report
+            valueConsumed: valueConsumed,
+            calories: fruit.calories ? (fruit.calories * amount) : 0,
+            nutritionalInfo: fruit.nutritionalInfo || null
         });
 
         // 3. Broadcast to Global Feed (Privacy-First)
