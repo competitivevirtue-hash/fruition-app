@@ -179,6 +179,7 @@ const FruitCard = ({ fruit, onDetails, onConsume, onDelete }) => {
                     {fruit.storageMethod === 'Pantry' && '🚪 Pantry'}
                     {(!fruit.storageMethod || fruit.storageMethod === 'Counter') && '🧺 Counter'}
                 </div>
+            )}
             {/* Optional Subtitle for context like 'Added 2 days ago' */}
             {fruit.subtitle && (
                 <p style={{ fontSize: '0.75rem', color: 'var(--color-primary)', margin: '0.25rem 0 0', fontWeight: 500 }}>

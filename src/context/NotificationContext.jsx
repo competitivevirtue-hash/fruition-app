@@ -170,7 +170,6 @@ export const NotificationProvider = ({ children }) => {
             markAsRead,
             markAllAsRead,
             clearAll,
-            clearAll,
             addNotification, // Exposed for manual triggers (e.g. Welcome message)
             preferences,
             setPreferences

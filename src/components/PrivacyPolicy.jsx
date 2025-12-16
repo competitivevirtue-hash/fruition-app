@@ -87,7 +87,7 @@ const PrivacyPolicy = () => {
                 <p>You have the right to:</p>
                 <ul style={{ paddingLeft: '1.5rem', marginTop: '1rem', color: 'var(--color-text-muted)' }}>
                     <li><strong>Access:</strong> Request copies of your personal data.</li>
-                    <li><strong>Deletion:</strong> Request that we delete your personal data (available directly in App Settings > Security > Delete Account).</li>
+                    <li><strong>Deletion:</strong> Request that we delete your personal data (available directly in App Settings &gt; Security &gt; Delete Account).</li>
                     <li><strong>Correction:</strong> Request that we correct any information you believe is inaccurate.</li>
                 </ul>
             </section>
