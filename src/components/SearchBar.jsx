@@ -62,9 +62,9 @@ const SearchBar = ({ onFruitSelect, onSparkleClick }) => {
                 padding: '12px 20px',
                 borderRadius: '50px',
                 border: showSmartAction ? '1px solid var(--color-primary)' : '1px solid var(--color-border)',
-                background: 'var(--color-bg-card)', // Use card background logic
+                background: 'var(--color-surface)', // Ensure opaque/defined background
                 transition: 'all 0.3s ease',
-                boxShadow: showSmartAction ? '0 0 15px rgba(16, 185, 129, 0.2)' : '0 4px 12px rgba(0,0,0,0.05)'
+                boxShadow: showSmartAction ? '0 0 15px rgba(16, 185, 129, 0.2)' : '0 4px 12px rgba(0,0,0,0.1)'
             }}>
                 <Search size={20} style={{ color: 'var(--color-primary)', marginRight: '12px' }} />
                 <input
@@ -214,6 +214,10 @@ const SearchBar = ({ onFruitSelect, onSparkleClick }) => {
             <style jsx>{`
                 @keyframes spin {
                     to { transform: rotate(360deg); }
+                }
+                input::placeholder {
+                    color: var(--color-text);
+                    opacity: 0.7; /* Increase visibility */
                 }
             `}</style>
         </div >
