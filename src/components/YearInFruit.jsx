@@ -169,6 +169,16 @@ const YearInFruit = ({ isOpen, onClose }) => {
                     ))}
                 </div>
 
+                {/* Navigation Controls */}
+                {currentSlide > 0 && (
+                    <button
+                        onClick={(e) => { e.stopPropagation(); setCurrentSlide(curr => curr - 1); }}
+                        style={{ position: 'absolute', top: '40px', left: '20px', background: 'none', border: 'none', color: 'white', cursor: 'pointer', zIndex: 10 }}
+                    >
+                        <ChevronRight size={32} style={{ transform: 'rotate(180deg)' }} />
+                    </button>
+                )}
+
                 {/* Close Button */}
                 <button
                     onClick={(e) => { e.stopPropagation(); onClose(); }}
@@ -270,20 +280,39 @@ const YearInFruit = ({ isOpen, onClose }) => {
                                 </div>
                             </div>
 
-                            <button style={{
-                                marginTop: '2rem',
-                                width: '100%',
-                                padding: '16px',
-                                borderRadius: '30px',
-                                border: 'none',
-                                background: 'white',
-                                color: 'black',
-                                fontWeight: 'bold',
-                                fontSize: '1.1rem',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-                                cursor: 'pointer'
-                            }}>
-                                <Share2 size={20} /> Share
+                            <button
+                                onClick={async () => {
+                                    const shareData = {
+                                        title: 'My 2025 in Fruit 🍎',
+                                        text: `I ate ${stats.totalItems} pieces of fruit this year! That's ${stats.totalCalories.toLocaleString()} calories of natural energy. #Fruitopia`,
+                                        url: window.location.href
+                                    };
+                                    try {
+                                        if (navigator.share) {
+                                            await navigator.share(shareData);
+                                        } else {
+                                            // Fallback: Copy to clipboard
+                                            await navigator.clipboard.writeText(`${shareData.title}\n${shareData.text}`);
+                                            alert("Stats copied to clipboard! 📋");
+                                        }
+                                    } catch (err) {
+                                        console.error("Share failed:", err);
+                                    }
+                                }}
+                                style={{
+                                    marginTop: '2rem',
+                                    width: '100%',
+                                    padding: '16px',
+                                    borderRadius: '30px',
+                                    border: 'none',
+                                    background: 'white',
+                                    color: 'black',
+                                    fontWeight: 'bold',
+                                    fontSize: '1.1rem',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                                    cursor: 'pointer'
+                                }}>
+                                <Share2 size={20} /> Share Stats
                             </button>
                         </motion.div>
                     )}

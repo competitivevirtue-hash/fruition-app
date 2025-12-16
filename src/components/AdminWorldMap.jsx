@@ -17,12 +17,18 @@ const AdminWorldMap = ({ isOpen, onClose }) => {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
                     const { latitude, longitude } = position.coords;
+                    // Filter out invalid/default coordinates (0,0 is technically valid but usually means failure in this context)
+                    if (latitude === 0 && longitude === 0) return;
+
                     const loc = { lat: latitude, lng: longitude };
                     setMyLocation(loc);
                     // Push live location to Firestore
                     updateLastActive(loc);
                 },
-                (error) => console.error("GPS Error:", error)
+                (error) => {
+                    console.warn("GPS Access Denied/Error:", error);
+                    // Could set a default 'viewer' mode here without a 'YOU' dot
+                }
             );
         }
     }, [isOpen, updateLastActive]);
