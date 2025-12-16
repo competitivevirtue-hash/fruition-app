@@ -173,7 +173,7 @@ const DashboardWidgets = ({ fruits }) => {
             </div>
 
             {/* Widget 3: Freshness Forecast (Actionable) */}
-            <div className={`dash-widget freshness-widget glass-panel ${intelligence.expiringItems.length > 0 ? 'urgent' : ''}`}>
+            <div className="dash-widget freshness-widget glass-panel">
                 <div className="widget-header">
                     {/* Freshness Alerts */}
                     <h3>Freshness Forecast</h3>

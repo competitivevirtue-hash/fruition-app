@@ -61,10 +61,10 @@ const SearchBar = ({ onFruitSelect, onSparkleClick }) => {
                 alignItems: 'center',
                 padding: '12px 20px',
                 borderRadius: '50px',
-                border: showSmartAction ? '1px solid var(--color-primary)' : '1px solid rgba(255,255,255,0.1)',
-                background: 'rgba(255,255,255,0.05)',
+                border: showSmartAction ? '1px solid var(--color-primary)' : '1px solid var(--color-border)',
+                background: 'var(--color-bg-card)', // Use card background logic
                 transition: 'all 0.3s ease',
-                boxShadow: showSmartAction ? '0 0 15px rgba(16, 185, 129, 0.2)' : 'none'
+                boxShadow: showSmartAction ? '0 0 15px rgba(16, 185, 129, 0.2)' : '0 4px 12px rgba(0,0,0,0.05)'
             }}>
                 <Search size={20} style={{ color: 'var(--color-primary)', marginRight: '12px' }} />
                 <input

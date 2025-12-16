@@ -71,8 +71,8 @@ const LandingPage = () => {
                     </div>
                     <div className="feature-card glass-panel">
                         <div className="feature-icon time-bg">⏳</div>
-                        <h3>Freshness Forecast</h3>
-                        <p>Never waste fruit again. Get intelligent alerts when your items need to be eaten.</p>
+                        <h3>Smart Storage Brain</h3>
+                        <p>Know exactly how long it lasts. Intelligent predictions for Fridge vs. Counter storage.</p>
                     </div>
                     <div className="feature-card glass-panel">
                         <div className="feature-icon bio-bg">🧬</div>

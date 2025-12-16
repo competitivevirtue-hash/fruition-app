@@ -185,7 +185,7 @@ const AdminWorldMap = ({ isOpen, onClose }) => {
                                         zIndex: isMe ? 20 : 10
                                     }}
                                 >
-                                    <div className={`map - user - dot ${isMe ? 'is-me' : ''} `}>
+                                    <div className={`map-user-dot ${isMe ? 'is-me' : ''}`}>
                                         <div className="dot-core" />
                                         <div className="dot-ring" />
                                         {isMe && <div className="dot-radar" />}
@@ -231,72 +231,72 @@ const AdminWorldMap = ({ isOpen, onClose }) => {
                 </div>
             </motion.div>
             <style jsx>{`
-    .map - user - dot {
-    position: relative;
-    width: 0;
-    height: 0;
-    display: flex;
-    align - items: center;
-    justify - content: center;
-}
-                .dot - core {
-    width: 6px;
-    height: 6px;
-    background: #10b981;
-    border - radius: 50 %;
-    box - shadow: 0 0 10px #10b981;
-    position: absolute;
-}
-                .is - me.dot - core {
-    background: #3b82f6;
-    box - shadow: 0 0 15px #3b82f6;
-    width: 8px; height: 8px;
-}
-                .dot - ring {
-    position: absolute;
-    width: 20px; height: 20px;
-    border: 1px solid #10b981;
-    border - radius: 50 %;
-    animation: ripple 2s infinite ease - out;
-    opacity: 0;
-}
-                .is - me.dot - ring {
-    border - color: #3b82f6;
-}
-                .dot - radar {
-    position: absolute;
-    width: 100px; height: 100px;
-    border - radius: 50 %;
-    background: conic - gradient(from 0deg, transparent 0deg, rgba(59, 130, 246, 0.15) 60deg, transparent 60deg);
-    animation: radar - spin 4s linear infinite;
-    opacity: 0.1;
-    pointer - events: none;
-}
+                .map-user-dot {
+                    position: relative;
+                    width: 0;
+                    height: 0;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                .dot-core {
+                    width: 6px;
+                    height: 6px;
+                    background: #10b981;
+                    border-radius: 50%;
+                    box-shadow: 0 0 10px #10b981;
+                    position: absolute;
+                }
+                .is-me .dot-core {
+                    background: #3b82f6;
+                    box-shadow: 0 0 15px #3b82f6;
+                    width: 8px; height: 8px;
+                }
+                .dot-ring {
+                    position: absolute;
+                    width: 20px; height: 20px;
+                    border: 1px solid #10b981;
+                    border-radius: 50%;
+                    animation: ripple 2s infinite ease-out;
+                    opacity: 0;
+                }
+                .is-me .dot-ring {
+                    border-color: #3b82f6;
+                }
+                .dot-radar {
+                    position: absolute;
+                    width: 100px; height: 100px;
+                    border-radius: 50%;
+                    background: conic-gradient(from 0deg, transparent 0deg, rgba(59, 130, 246, 0.15) 60deg, transparent 60deg);
+                    animation: radar-spin 4s linear infinite;
+                    opacity: 0.1;
+                    pointer-events: none;
+                }
                 
-                .dot - label {
-    position: absolute;
-    top: -25px;
-    left: 50 %;
-    transform: translateX(-50 %);
-    background: rgba(0, 0, 0, 0.8);
-    padding: 4px 8px;
-    border - radius: 4px;
-    font - size: 0.7rem;
-    color: #fff;
-    white - space: nowrap;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    display: flex; alignItems: center;
-}
+                .dot-label {
+                    position: absolute;
+                    top: -25px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: rgba(0, 0, 0, 0.8);
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    font-size: 0.7rem;
+                    color: #fff;
+                    white-space: nowrap;
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    display: flex; alignItems: center;
+                }
 
-@keyframes ripple {
-    0 % { transform: scale(0.5); opacity: 0.8; }
-    100 % { transform: scale(3); opacity: 0; }
-}
-@keyframes radar - spin {
+                @keyframes ripple {
+                    0% { transform: scale(0.5); opacity: 0.8; }
+                    100% { transform: scale(3); opacity: 0; }
+                }
+                @keyframes radar-spin {
                     from { transform: rotate(0deg); }
                     to { transform: rotate(360deg); }
-}
-`}</style>
+                }
+            `}</style>
         </motion.div>
     );
 };

@@ -30,44 +30,58 @@ const YearInFruit = ({ isOpen, onClose }) => {
 
     const loadStats = async () => {
         setLoading(true);
-        const data = await getStats();
-        const consumed = data.consumed || [];
+        // Safety timeout
+        const timer = setTimeout(() => {
+            if (loading) setLoading(false);
+        }, 8000);
 
-        // Aggregation
-        const totalItems = consumed.reduce((acc, item) => acc + (Number(item.amount) || 0), 0);
-        const totalCalories = consumed.reduce((acc, item) => acc + (Number(item.calories) || 0), 0);
-        const totalSpend = consumed.reduce((acc, item) => acc + (Number(item.valueConsumed) || 0), 0);
+        try {
+            const data = await getStats();
+            // Clear timeout if successful
+            clearTimeout(timer);
 
-        // Calculate Top Fruit
-        const fruitCounts = {};
-        consumed.forEach(item => {
-            const name = item.fruitName || 'Unknown';
-            fruitCounts[name] = (fruitCounts[name] || 0) + (Number(item.amount) || 0);
-        });
+            const consumed = data.consumed || [];
 
-        // Find max
-        let topFruitName = 'None';
-        let topFruitCount = 0;
-        Object.entries(fruitCounts).forEach(([name, count]) => {
-            if (count > topFruitCount) {
-                topFruitCount = count;
-                topFruitName = name;
-            }
-        });
+            // Aggregation
+            const totalItems = consumed.reduce((acc, item) => acc + (Number(item.amount) || 0), 0);
+            const totalCalories = consumed.reduce((acc, item) => acc + (Number(item.calories) || 0), 0);
+            const totalSpend = consumed.reduce((acc, item) => acc + (Number(item.valueConsumed) || 0), 0);
 
-        // Unique varieties
-        const uniqueFruits = Object.keys(fruitCounts).length;
+            // Calculate Top Fruit
+            const fruitCounts = {};
+            consumed.forEach(item => {
+                const name = item.fruitName || 'Unknown';
+                fruitCounts[name] = (fruitCounts[name] || 0) + (Number(item.amount) || 0);
+            });
 
-        setStats({
-            totalItems,
-            totalCalories,
-            totalSpend,
-            topFruitName,
-            topFruitCount,
-            uniqueFruits: fruits,
-            sampleData: consumed.length > 0 // Flag if we have data
-        });
-        setLoading(false);
+            // Find max
+            let topFruitName = 'None';
+            let topFruitCount = 0;
+            Object.entries(fruitCounts).forEach(([name, count]) => {
+                if (count > topFruitCount) {
+                    topFruitCount = count;
+                    topFruitName = name;
+                }
+            });
+
+            // Unique varieties
+            const uniqueFruits = Object.keys(fruitCounts).length;
+
+            setStats({
+                totalItems,
+                totalCalories,
+                totalSpend,
+                topFruitName,
+                topFruitCount,
+                uniqueFruits: uniqueFruits, // Correction: was 'fruits' global var
+                sampleData: consumed.length > 0 // Flag if we have data
+            });
+        } catch (error) {
+            console.error("YearInFruit Error:", error);
+            // Even on error, we stop loading so user isn't stuck
+        } finally {
+            setLoading(false);
+        }
     };
 
     const nextSlide = (e) => {
@@ -99,8 +113,17 @@ const YearInFruit = ({ isOpen, onClose }) => {
 
     if (loading) {
         return (
-            <div className="modal-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.9)', zIndex: 9999 }}>
-                <div style={{ color: 'white', fontWeight: 'bold' }}>Crunching the numbers...</div>
+            <div className="modal-overlay" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.9)', zIndex: 9999 }}>
+                <div style={{ color: 'white', fontWeight: 'bold', marginBottom: '1rem' }}>Crunching the numbers...</div>
+                <button
+                    onClick={(e) => { e.stopPropagation(); onClose(); }}
+                    style={{
+                        padding: '8px 16px', borderRadius: '20px', background: 'rgba(255,255,255,0.1)',
+                        border: 'none', color: 'white', cursor: 'pointer', fontSize: '0.9rem'
+                    }}
+                >
+                    Cancel
+                </button>
             </div>
         );
     }
