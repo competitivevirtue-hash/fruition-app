@@ -40,6 +40,7 @@ const Dashboard = () => {
     const [prefillFruitName, setPrefillFruitName] = useState('');
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [showSplash, setShowSplash] = useState(true);
+    const [fruitToEdit, setFruitToEdit] = useState(null); // Edit State
 
     // Routing State
     const location = useLocation();
@@ -310,6 +311,10 @@ const Dashboard = () => {
                                     onDetails={() => setSelectedFruit(fruit)}
                                     onConsume={(amount) => consumeFruit(fruit.id, amount)}
                                     onDelete={removeFruit}
+                                    onEdit={(fruit) => {
+                                        setFruitToEdit(fruit);
+                                        setIsAddFruitOpen(true);
+                                    }}
                                 />
                             ))}
                         </div>
@@ -364,9 +369,11 @@ const Dashboard = () => {
                 onClose={() => {
                     setIsAddFruitOpen(false);
                     setPrefillFruitName('');
+                    setFruitToEdit(null); // Clear edit state
                 }}
                 initialDate={addFruitDate}
                 initialFruitName={prefillFruitName}
+                fruitToEdit={fruitToEdit} // Pass edit target
             />
 
             <ProfileModal

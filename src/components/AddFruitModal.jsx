@@ -7,8 +7,8 @@ import { fetchFruitNutrition, searchFruits } from '../utils/usdaApi';
 import { translations } from '../utils/translations';
 import './BioModal.css'; // Reuse styles
 
-const AddFruitModal = ({ isOpen, onClose, initialDate, initialFruitName }) => {
-    const { addFruit } = useFruit();
+const AddFruitModal = ({ isOpen, onClose, initialDate, initialFruitName, fruitToEdit }) => {
+    const { addFruit, updateFruit } = useFruit();
 
     // If initialDate is provided and is in the past/future (not today), boughtToday should default to false
     const isToday = !initialDate || new Date(initialDate).toDateString() === new Date().toDateString();
@@ -30,31 +30,51 @@ const AddFruitModal = ({ isOpen, onClose, initialDate, initialFruitName }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [typingTimeout, setTypingTimeout] = useState(null);
 
+    // Price is entered as TOTAL price for the batch
     const [price, setPrice] = useState('');
     const [expiryOverride, setExpiryOverride] = useState('');
 
-    // Reset form when modal opens
+    // Reset or Prefill form
     React.useEffect(() => {
         if (isOpen) {
-            const dateToUse = initialDate ? new Date(initialDate) : new Date();
-            const isDateToday = dateToUse.toDateString() === new Date().toDateString();
+            if (fruitToEdit) {
+                // EDIT MODE
+                setFormData({
+                    name: fruitToEdit.name || '',
+                    quantity: fruitToEdit.quantity || 1,
+                    unit: fruitToEdit.unit || 'Pieces',
+                    storageMethod: fruitToEdit.storageMethod || 'Counter',
+                    purchaseDate: fruitToEdit.purchaseDate ? new Date(fruitToEdit.purchaseDate) : new Date()
+                });
+                // Calculate Total Price from Unit Price for display
+                const totalEstimated = (fruitToEdit.pricePerUnit || 0) * (fruitToEdit.quantity || 1);
+                setPrice(totalEstimated > 0 ? totalEstimated.toFixed(2) : '');
 
-            setFormData(prev => ({
-                ...prev,
-                name: initialFruitName || '',
-                quantity: 1,
-                unit: 'Pieces',
-                storageMethod: 'Counter',
-                purchaseDate: dateToUse
-            }));
-            setPrice(''); // Reset price
-            setCurrentMonth(dateToUse);
-            setBoughtToday(isDateToday);
+                setExpiryOverride(fruitToEdit.expiryDate || '');
+                setBoughtToday(false); // Assume edit is historic unless changed
+                setCurrentMonth(new Date());
+            } else {
+                // ADD MODE
+                const dateToUse = initialDate ? new Date(initialDate) : new Date();
+                const isDateToday = dateToUse.toDateString() === new Date().toDateString();
+
+                setFormData({
+                    name: initialFruitName || '',
+                    quantity: 1,
+                    unit: 'Pieces',
+                    storageMethod: 'Counter',
+                    purchaseDate: dateToUse
+                });
+                setPrice('');
+                setExpiryOverride('');
+                setCurrentMonth(dateToUse);
+                setBoughtToday(isDateToday);
+            }
             setShowCalendar(false);
             setUnitDropdownOpen(false);
             setSuggestions([]);
         }
-    }, [isOpen, initialDate, initialFruitName]);
+    }, [isOpen, initialDate, initialFruitName, fruitToEdit]);
 
     // Get language from localStorage (simple approach for now, ideally via Context)
     const language = localStorage.getItem('language') || 'en';
@@ -67,7 +87,7 @@ const AddFruitModal = ({ isOpen, onClose, initialDate, initialFruitName }) => {
         today.setHours(0, 0, 0, 0);
 
         let purchaseDate = new Date(formData.purchaseDate);
-        if (boughtToday) {
+        if (boughtToday && !fruitToEdit) {
             purchaseDate = new Date();
         }
         purchaseDate.setHours(0, 0, 0, 0);
@@ -75,49 +95,65 @@ const AddFruitModal = ({ isOpen, onClose, initialDate, initialFruitName }) => {
         const isFuture = purchaseDate > today;
         const status = isFuture ? 'Planned' : 'Active';
 
-        // Fetch Nutrition Data
-        let nutrition = null;
-        try {
-            nutrition = await fetchFruitNutrition(formData.name);
-        } catch (err) {
-            console.warn("Failed to fetch nutrition:", err);
-        }
+        // Price Logic: User enters TOTAL, we store PER UNIT
+        const qty = parseFloat(formData.quantity) || 1;
+        const totalPrice = parseFloat(price) || 0;
+        const pricePerUnit = totalPrice / qty;
 
-        const newFruit = {
+        // Common Data
+        const fruitData = {
             name: normalizeFruitName(formData.name),
-            image: 'https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?auto=format&fit=crop&q=80&w=500', // Placeholder
-            calories: nutrition?.calories ? parseInt(nutrition.calories) : 95,
-            fruitcyclopedia: {
-                vitaminC: nutrition?.vitaminC || 'Unknown',
-                fiber: nutrition?.fiber || 'Unknown',
-                antioxidants: 'Unknown'
-            },
-            nutritionalInfo: nutrition, // Raw object for detailed reports
-            pricePerUnit: parseFloat(price) || 0, // Financial Tracking
-            scientificFact: 'Information coming soon.',
-            makeItPlain: 'We are still learning about this fruit.',
-            freshness: 'Peak',
-            daysRemaining: expiryOverride
-                ? Math.ceil((new Date(expiryOverride) - new Date()) / (1000 * 60 * 60 * 24))
-                : 7, // Default if no override
-            purchaseDate: purchaseDate.toISOString(),
             quantity: parseInt(formData.quantity),
             unit: formData.unit,
             storageMethod: formData.storageMethod,
-            expiryDate: expiryOverride || null, // EXPLICIT OVERRIDE
+            expiryDate: expiryOverride || null,
+            purchaseDate: purchaseDate.toISOString(),
+            pricePerUnit: pricePerUnit, // CORRECTED LOGIC
             status: status
         };
 
         try {
-            await addFruit(newFruit);
+            if (fruitToEdit) {
+                // UPDATE
+                await updateFruit(fruitToEdit.id, {
+                    ...fruitData,
+                    // Don't overwrite static fields like image/nutrition unless re-fetched (skipping re-fetch for now to be safe)
+                });
+            } else {
+                // CREATE
+                // Fetch Nutrition only on new add to save API calls
+                let nutrition = null;
+                try {
+                    nutrition = await fetchFruitNutrition(formData.name);
+                } catch (err) {
+                    console.warn("Failed to fetch nutrition:", err);
+                }
+
+                const newFruit = {
+                    ...fruitData,
+                    image: 'https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?auto=format&fit=crop&q=80&w=500',
+                    calories: nutrition?.calories ? parseInt(nutrition.calories) : 95,
+                    fruitcyclopedia: {
+                        vitaminC: nutrition?.vitaminC || 'Unknown',
+                        fiber: nutrition?.fiber || 'Unknown',
+                        antioxidants: 'Unknown'
+                    },
+                    nutritionalInfo: nutrition,
+                    scientificFact: 'Information coming soon.',
+                    makeItPlain: 'We are still learning about this fruit.',
+                    freshness: 'Peak',
+                    daysRemaining: expiryOverride
+                        ? Math.ceil((new Date(expiryOverride) - new Date()) / (1000 * 60 * 60 * 24))
+                        : 7
+                };
+                await addFruit(newFruit);
+            }
+
             onClose();
-            setFormData({ name: '', quantity: 1, unit: 'Pieces', storageMethod: 'Counter', purchaseDate: new Date() });
+            // Reset is handled by useEffect on open, but good practice to clear local
             setPrice('');
-            setBoughtToday(true);
-            setShowCalendar(false);
         } catch (error) {
-            console.error("Error adding fruit:", error);
-            // Optionally set an error state here to show to user
+            console.error("Error saving fruit:", error);
         }
     };
 
@@ -245,7 +281,9 @@ const AddFruitModal = ({ isOpen, onClose, initialDate, initialFruitName }) => {
                     </button>
 
                     <div style={{ padding: '2rem' }}>
-                        <h2 className="text-gradient" style={{ marginBottom: '1.5rem' }}>{t('addToBasket')}</h2>
+                        <h2 className="text-gradient" style={{ marginBottom: '1.5rem' }}>
+                            {fruitToEdit ? 'Update Fruit' : t('addToBasket')}
+                        </h2>
 
                         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', paddingBottom: '100px' }}>
                             <div className="form-group" style={{ position: 'relative' }}>
@@ -581,7 +619,7 @@ const AddFruitModal = ({ isOpen, onClose, initialDate, initialFruitName }) => {
                                 style={{ marginTop: '1rem', padding: '12px', fontSize: '1rem' }}
                             >
                                 <Plus size={20} style={{ marginRight: '0.5rem' }} />
-                                {t('addItem')}
+                                {fruitToEdit ? 'Update Item' : t('addItem')}
                             </button>
                         </form>
                     </div>

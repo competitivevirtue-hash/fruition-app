@@ -2,12 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { db } from '../firebase';
-import { collection, query, where, getDocs, updateDoc, doc, getCountFromServer, limit, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, updateDoc, doc, getCountFromServer, limit, orderBy, collectionGroup } from 'firebase/firestore';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import AdminWorldMap from '../components/AdminWorldMap';
 import YearInFruit from '../components/YearInFruit';
-import { Users, Search, Shield, AlertTriangle, Ban, CheckCircle, Activity, Lock, ChevronLeft, Bell, Globe, Zap } from 'lucide-react';
+import { Users, Search, Shield, AlertTriangle, Ban, CheckCircle, Activity, Lock, ChevronLeft, Bell, Globe, Zap, BarChart3, DollarSign, Utensils } from 'lucide-react';
 
 const AdminDashboard = () => {
     const { currentUser, isAdmin } = useAuth();
@@ -15,7 +15,14 @@ const AdminDashboard = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [stats, setStats] = useState({ totalUsers: 0, founders: 1, status: 'Operational' });
+    const [stats, setStats] = useState({
+        totalUsers: 0,
+        founders: 1,
+        status: 'Operational',
+        globalItemsConsumed: 0,
+        globalValueSaved: 0,
+        globalCalories: 0
+    });
     const [selectedUser, setSelectedUser] = useState(null);
     const [showMap, setShowMap] = useState(false);
     const [showYearInFruit, setShowYearInFruit] = useState(false);
@@ -42,22 +49,40 @@ const AdminDashboard = () => {
                 const bannedQ = query(usersColl, where('disabled', '==', true));
                 const bannedSnap = await getCountFromServer(bannedQ);
 
-                setStats(prev => ({
-                    ...prev,
-                    totalUsers: snapshot.data().count,
-                    bannedUsers: bannedSnap.data().count
-                }));
-
                 // Fetch Active Today
                 const yesterday = new Date();
                 yesterday.setHours(yesterday.getHours() - 24);
-                const activeQ = query(usersColl, where('lastActive', '>', yesterday)); // Firestore will auto-convert Date to Timestamp in queries usually, but explicit Timestamp is safer if imported
+                const activeQ = query(usersColl, where('lastActive', '>', yesterday));
                 const activeSnap = await getCountFromServer(activeQ);
+
+                // --- GLOBAL METRICS (The "Metrics Across The Board") ---
+                // Query all 'consumed' subcollections across the entire database
+                // Note: This requires a Firestore Index on 'consumed' collection group if using filters,
+                // but for simple getDocs without complex where clauses it might work or require simple index.
+                const globalConsumedQ = query(collectionGroup(db, 'consumed'));
+                const globalConsumedSnap = await getDocs(globalConsumedQ);
+
+                let totalItems = 0;
+                let totalValue = 0;
+                let totalCals = 0;
+
+                globalConsumedSnap.forEach(doc => {
+                    const data = doc.data();
+                    totalItems += (Number(data.amount) || 0);
+                    totalValue += (Number(data.valueConsumed) || 0);
+                    totalCals += (Number(data.calories) || 0);
+                });
 
                 setStats(prev => ({
                     ...prev,
-                    activeToday: activeSnap.data().count
+                    totalUsers: snapshot.data().count,
+                    bannedUsers: bannedSnap.data().count,
+                    activeToday: activeSnap.data().count,
+                    globalItemsConsumed: totalItems,
+                    globalValueSaved: totalValue,
+                    globalCalories: totalCals
                 }));
+
             } catch (error) {
                 console.error("Failed to fetch stats:", error);
             }
@@ -240,8 +265,28 @@ const AdminDashboard = () => {
                         <span style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>System Status</span>
                         <Activity size={20} color="#10b981" />
                     </div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#10b981', display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <CheckCircle size={20} /> {stats.status}
+                    </div>
+                </div>
+                
+                {/* GLOBAL IMPACT METRICS */}
+                <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: '20px', background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.1))', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                        <span style={{ color: '#60a5fa', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Global Consumption</span>
+                        <Utensils size={20} color="#60a5fa" />
+                    </div>
+                    <div className="text-glow" style={{ fontSize: '2rem', fontWeight: '800', color: '#60a5fa' }}>
+                        {stats.globalItemsConsumed ? stats.globalItemsConsumed.toLocaleString() : 0} <span style={{fontSize: '1rem', opacity: 0.7}}>items</span>
+                    </div>
+                </div>
+
+                <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: '20px', background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1))', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                        <span style={{ color: '#34d399', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Community Value</span>
+                        <DollarSign size={20} color="#34d399" />
+                    </div>
+                    <div className="text-glow" style={{ fontSize: '2rem', fontWeight: '800', color: '#34d399' }}>
+                        ${stats.globalValueSaved ? stats.globalValueSaved.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0}) : 0}
                     </div>
                 </div>
                 <div
@@ -312,199 +357,199 @@ const AdminDashboard = () => {
             />
 
 
-            {/* Tab Navigation */}
-            <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
-                <button
-                    onClick={() => setActiveTab('users')}
-                    style={{
-                        padding: '12px 24px',
-                        background: activeTab === 'users' ? 'var(--color-primary)' : 'rgba(255,255,255,0.05)',
-                        color: activeTab === 'users' ? 'white' : 'var(--color-text-muted)',
-                        borderRadius: '12px',
-                        border: 'none',
-                        fontWeight: 600,
-                        cursor: 'pointer'
-                    }}
-                >
-                    User Management
-                </button>
-                <button
-                    onClick={() => setActiveTab('logs')}
-                    style={{
-                        padding: '12px 24px',
-                        background: activeTab === 'logs' ? 'var(--color-primary)' : 'rgba(255,255,255,0.05)',
-                        color: activeTab === 'logs' ? 'white' : 'var(--color-text-muted)',
-                        borderRadius: '12px',
-                        border: 'none',
-                        fontWeight: 600,
-                        cursor: 'pointer'
-                    }}
-                >
-                    System Logs
-                </button>
-                <div style={{ flex: 1 }}></div>
-                <button
-                    onClick={handleResetCounter}
-                    style={{
-                        padding: '12px 24px',
-                        background: 'rgba(239, 68, 68, 0.15)',
-                        color: '#ef4444',
-                        borderRadius: '12px',
-                        border: '1px solid rgba(239, 68, 68, 0.3)',
-                        fontWeight: 800,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px'
-                    }}
-                >
-                    <AlertTriangle size={18} /> RESET MEMBER IDs
-                </button>
-            </div>
+            {/* Tab Navigation */ }
+    <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+        <button
+            onClick={() => setActiveTab('users')}
+            style={{
+                padding: '12px 24px',
+                background: activeTab === 'users' ? 'var(--color-primary)' : 'rgba(255,255,255,0.05)',
+                color: activeTab === 'users' ? 'white' : 'var(--color-text-muted)',
+                borderRadius: '12px',
+                border: 'none',
+                fontWeight: 600,
+                cursor: 'pointer'
+            }}
+        >
+            User Management
+        </button>
+        <button
+            onClick={() => setActiveTab('logs')}
+            style={{
+                padding: '12px 24px',
+                background: activeTab === 'logs' ? 'var(--color-primary)' : 'rgba(255,255,255,0.05)',
+                color: activeTab === 'logs' ? 'white' : 'var(--color-text-muted)',
+                borderRadius: '12px',
+                border: 'none',
+                fontWeight: 600,
+                cursor: 'pointer'
+            }}
+        >
+            System Logs
+        </button>
+        <div style={{ flex: 1 }}></div>
+        <button
+            onClick={handleResetCounter}
+            style={{
+                padding: '12px 24px',
+                background: 'rgba(239, 68, 68, 0.15)',
+                color: '#ef4444',
+                borderRadius: '12px',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                fontWeight: 800,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+            }}
+        >
+            <AlertTriangle size={18} /> RESET MEMBER IDs
+        </button>
+    </div>
 
-            {/* Main Content Area */}
-            <div className="glass-panel" style={{ padding: '2rem', borderRadius: '24px', minHeight: '400px' }}>
-                {activeTab === 'users' ? (
-                    <>
-                        <h2 style={{ fontSize: '1.4rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--color-text)' }}>
-                            <Search size={24} /> User Management
-                        </h2>
+    {/* Main Content Area */ }
+    <div className="glass-panel" style={{ padding: '2rem', borderRadius: '24px', minHeight: '400px' }}>
+        {activeTab === 'users' ? (
+            <>
+                <h2 style={{ fontSize: '1.4rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--color-text)' }}>
+                    <Search size={24} /> User Management
+                </h2>
 
-                        {/* Search Bar */}
-                        <form onSubmit={handleSearch} style={{ marginBottom: '2rem', display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
-                            <div style={{ position: 'relative', flex: '1 1 250px' }}>
-                                <Search size={20} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
-                                <input
-                                    type="text"
-                                    placeholder="Search users..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    style={{
-                                        width: '100%',
-                                        padding: '16px 16px 16px 48px',
-                                        borderRadius: '16px',
-                                        background: 'var(--glass-background)',
-                                        border: '1px solid rgba(255,255,255,0.1)',
-                                        color: 'var(--color-text)',
-                                        fontSize: '1rem',
-                                        outline: 'none'
-                                    }}
-                                />
-                            </div>
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="btn btn-primary"
-                                style={{ padding: '16px 2.5rem', borderRadius: '16px', fontWeight: 'bold', flex: '0 1 auto' }}
-                            >
-                                {loading ? 'Scanning...' : 'Search'}
-                            </button>
-                        </form>
+                {/* Search Bar */}
+                <form onSubmit={handleSearch} style={{ marginBottom: '2rem', display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div style={{ position: 'relative', flex: '1 1 250px' }}>
+                        <Search size={20} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
+                        <input
+                            type="text"
+                            placeholder="Search users..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            style={{
+                                width: '100%',
+                                padding: '16px 16px 16px 48px',
+                                borderRadius: '16px',
+                                background: 'var(--glass-background)',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                color: 'var(--color-text)',
+                                fontSize: '1rem',
+                                outline: 'none'
+                            }}
+                        />
+                    </div>
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="btn btn-primary"
+                        style={{ padding: '16px 2.5rem', borderRadius: '16px', fontWeight: 'bold', flex: '0 1 auto' }}
+                    >
+                        {loading ? 'Scanning...' : 'Search'}
+                    </button>
+                </form>
 
-                        {/* Users Table */}
-                        <div style={{ overflowX: 'auto' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--color-text-muted)' }}>
-                                <thead>
-                                    <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', textAlign: 'left' }}>
-                                        <th style={{ padding: '1rem', color: 'var(--color-text)' }}>User</th>
-                                        <th style={{ padding: '1rem', color: 'var(--color-text)' }}>Member ID</th>
-                                        <th style={{ padding: '1rem', color: 'var(--color-text)' }}>Status</th>
-                                        <th style={{ padding: '1rem', color: 'var(--color-text)', textAlign: 'right' }}>Actions</th>
+                {/* Users Table */}
+                <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--color-text-muted)' }}>
+                        <thead>
+                            <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', textAlign: 'left' }}>
+                                <th style={{ padding: '1rem', color: 'var(--color-text)' }}>User</th>
+                                <th style={{ padding: '1rem', color: 'var(--color-text)' }}>Member ID</th>
+                                <th style={{ padding: '1rem', color: 'var(--color-text)' }}>Status</th>
+                                <th style={{ padding: '1rem', color: 'var(--color-text)', textAlign: 'right' }}>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {searchResults.length > 0 ? (
+                                searchResults.map(user => (
+                                    <tr key={user.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                        <td style={{ padding: '1rem' }}>
+                                            <div style={{ fontWeight: 'bold', color: 'var(--color-text)' }}>{user.displayName || 'Unknown'}</div>
+                                            <div style={{ fontSize: '0.8rem' }}>{user.email}</div>
+                                            <div style={{ fontSize: '0.7rem', fontFamily: 'monospace', opacity: 0.5 }}>{user.id}</div>
+                                        </td>
+                                        <td style={{ padding: '1rem' }}>#{user.memberId}</td>
+                                        <td style={{ padding: '1rem' }}>
+                                            {user.disabled ? (
+                                                <span style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#ef4444', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 'bold' }}>BANNED</span>
+                                            ) : (
+                                                <span style={{ background: 'rgba(16, 185, 129, 0.2)', color: '#10b981', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 'bold' }}>ACTIVE</span>
+                                            )}
+                                        </td>
+                                        <td style={{ padding: '1rem', textAlign: 'right' }}>
+                                            <button
+                                                onClick={() => toggleBan(user)}
+                                                disabled={user.memberId === 1 || user.email === 'paytonpleasanti@gmail.com'}
+                                                style={{
+                                                    padding: '8px 16px',
+                                                    borderRadius: '8px',
+                                                    border: 'none',
+                                                    background: (user.memberId === 1 || user.email === 'paytonpleasanti@gmail.com') ? 'rgba(255,255,255,0.1)' : (user.disabled ? '#10b981' : '#ef4444'),
+                                                    color: (user.memberId === 1 || user.email === 'paytonpleasanti@gmail.com') ? 'rgba(255,255,255,0.3)' : 'white',
+                                                    cursor: (user.memberId === 1 || user.email === 'paytonpleasanti@gmail.com') ? 'not-allowed' : 'pointer',
+                                                    fontWeight: 'bold',
+                                                    fontSize: '0.8rem'
+                                                }}
+                                            >
+                                                {user.memberId === 1 ? 'IMMUNE' : (user.disabled ? 'UNBAN' : 'BAN')}
+                                            </button>
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    {searchResults.length > 0 ? (
-                                        searchResults.map(user => (
-                                            <tr key={user.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                                <td style={{ padding: '1rem' }}>
-                                                    <div style={{ fontWeight: 'bold', color: 'var(--color-text)' }}>{user.displayName || 'Unknown'}</div>
-                                                    <div style={{ fontSize: '0.8rem' }}>{user.email}</div>
-                                                    <div style={{ fontSize: '0.7rem', fontFamily: 'monospace', opacity: 0.5 }}>{user.id}</div>
-                                                </td>
-                                                <td style={{ padding: '1rem' }}>#{user.memberId}</td>
-                                                <td style={{ padding: '1rem' }}>
-                                                    {user.disabled ? (
-                                                        <span style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#ef4444', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 'bold' }}>BANNED</span>
-                                                    ) : (
-                                                        <span style={{ background: 'rgba(16, 185, 129, 0.2)', color: '#10b981', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 'bold' }}>ACTIVE</span>
-                                                    )}
-                                                </td>
-                                                <td style={{ padding: '1rem', textAlign: 'right' }}>
-                                                    <button
-                                                        onClick={() => toggleBan(user)}
-                                                        disabled={user.memberId === 1 || user.email === 'paytonpleasanti@gmail.com'}
-                                                        style={{
-                                                            padding: '8px 16px',
-                                                            borderRadius: '8px',
-                                                            border: 'none',
-                                                            background: (user.memberId === 1 || user.email === 'paytonpleasanti@gmail.com') ? 'rgba(255,255,255,0.1)' : (user.disabled ? '#10b981' : '#ef4444'),
-                                                            color: (user.memberId === 1 || user.email === 'paytonpleasanti@gmail.com') ? 'rgba(255,255,255,0.3)' : 'white',
-                                                            cursor: (user.memberId === 1 || user.email === 'paytonpleasanti@gmail.com') ? 'not-allowed' : 'pointer',
-                                                            fontWeight: 'bold',
-                                                            fontSize: '0.8rem'
-                                                        }}
-                                                    >
-                                                        {user.memberId === 1 ? 'IMMUNE' : (user.disabled ? 'UNBAN' : 'BAN')}
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    ) : (
-                                        <tr>
-                                            <td colSpan="4" style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>
-                                                {searchTerm ? 'No users found.' : 'Search for an email or leave blank to see Banned list.'}
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </>
-                ) : (
-                    <>
-                        <h2 style={{ fontSize: '1.4rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--color-text)' }}>
-                            <Activity size={24} /> System Logs (Recent 50)
-                        </h2>
-                        <div style={{ overflowX: 'auto' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
-                                <thead>
-                                    <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', textAlign: 'left' }}>
-                                        <th style={{ padding: '1rem', color: 'var(--color-text)' }}>Time</th>
-                                        <th style={{ padding: '1rem', color: 'var(--color-text)' }}>Level</th>
-                                        <th style={{ padding: '1rem', color: 'var(--color-text)' }}>Type</th>
-                                        <th style={{ padding: '1rem', color: 'var(--color-text)' }}>Message</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {logs.length > 0 ? logs.map(log => (
-                                        <tr key={log.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                            <td style={{ padding: '1rem', whiteSpace: 'nowrap' }}>
-                                                {log.timestamp?.toDate ? log.timestamp.toDate().toLocaleString() : 'Just now'}
-                                            </td>
-                                            <td style={{ padding: '1rem' }}>
-                                                <span style={{
-                                                    color: log.level === 'ERROR' || log.level === 'CRITICAL' ? '#ef4444' : log.level === 'WARN' ? '#f59e0b' : '#3b82f6',
-                                                    fontWeight: 'bold'
-                                                }}>
-                                                    {log.level}
-                                                </span>
-                                            </td>
-                                            <td style={{ padding: '1rem' }}>{log.type}</td>
-                                            <td style={{ padding: '1rem', fontFamily: 'monospace' }}>
-                                                {log.message}
-                                                {log.metadata && <div style={{ fontSize: '0.75rem', opacity: 0.7, marginTop: '4px' }}>{log.metadata}</div>}
-                                            </td>
-                                        </tr>
-                                    )) : (
-                                        <tr><td colSpan="4" style={{ padding: '2rem', textAlign: 'center' }}>No logs found.</td></tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </>
-                )}
-            </div>
-        </div>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="4" style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+                                        {searchTerm ? 'No users found.' : 'Search for an email or leave blank to see Banned list.'}
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </>
+        ) : (
+            <>
+                <h2 style={{ fontSize: '1.4rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--color-text)' }}>
+                    <Activity size={24} /> System Logs (Recent 50)
+                </h2>
+                <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
+                        <thead>
+                            <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', textAlign: 'left' }}>
+                                <th style={{ padding: '1rem', color: 'var(--color-text)' }}>Time</th>
+                                <th style={{ padding: '1rem', color: 'var(--color-text)' }}>Level</th>
+                                <th style={{ padding: '1rem', color: 'var(--color-text)' }}>Type</th>
+                                <th style={{ padding: '1rem', color: 'var(--color-text)' }}>Message</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {logs.length > 0 ? logs.map(log => (
+                                <tr key={log.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <td style={{ padding: '1rem', whiteSpace: 'nowrap' }}>
+                                        {log.timestamp?.toDate ? log.timestamp.toDate().toLocaleString() : 'Just now'}
+                                    </td>
+                                    <td style={{ padding: '1rem' }}>
+                                        <span style={{
+                                            color: log.level === 'ERROR' || log.level === 'CRITICAL' ? '#ef4444' : log.level === 'WARN' ? '#f59e0b' : '#3b82f6',
+                                            fontWeight: 'bold'
+                                        }}>
+                                            {log.level}
+                                        </span>
+                                    </td>
+                                    <td style={{ padding: '1rem' }}>{log.type}</td>
+                                    <td style={{ padding: '1rem', fontFamily: 'monospace' }}>
+                                        {log.message}
+                                        {log.metadata && <div style={{ fontSize: '0.75rem', opacity: 0.7, marginTop: '4px' }}>{log.metadata}</div>}
+                                    </td>
+                                </tr>
+                            )) : (
+                                <tr><td colSpan="4" style={{ padding: '2rem', textAlign: 'center' }}>No logs found.</td></tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </>
+        )}
+    </div>
+        </div >
     );
 };
 

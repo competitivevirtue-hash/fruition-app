@@ -183,6 +183,23 @@ export const FruitProvider = ({ children }) => {
         await deleteDoc(doc(db, docPath));
     };
 
+    const updateFruit = async (id, updates) => {
+        if (!currentUser) return;
+        const collectionPath = getInventoryPath();
+        const docPath = `${collectionPath}/${id}`;
+
+        // Remove undefined fields to prevent firestore errors
+        const cleanUpdates = Object.keys(updates).reduce((acc, key) => {
+            if (updates[key] !== undefined) acc[key] = updates[key];
+            return acc;
+        }, {});
+
+        await updateDoc(doc(db, docPath), cleanUpdates);
+    };
+
+    // -------------------------------------------------------------------------
+    // Consumption Logic
+    // -------------------------------------------------------------------------
     const consumeFruit = async (id, amount = 1) => {
         if (!currentUser) return;
 
@@ -282,6 +299,7 @@ export const FruitProvider = ({ children }) => {
         <FruitContext.Provider value={{
             fruits: state.fruits,
             addFruit,
+            updateFruit, // Exported
             removeFruit,
             consumeFruit,
             wasteFruit,

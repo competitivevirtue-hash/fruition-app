@@ -323,7 +323,8 @@ const Fruitcyclopedia = ({ onFruitSelect }) => {
                                                     key={fruit.id}
                                                 >
                                                     <FruitCard
-                                                        fruit={fruit}
+                                                        key={fruit.id}
+                                                        fruit={{ ...fruit, hideStorage: true }} // Hide storage icon for generic encyclopedia
                                                         onDetails={() => onFruitSelect(fruit)}
                                                         // Hide action buttons in cyclopedia mode
                                                         onConsume={null}

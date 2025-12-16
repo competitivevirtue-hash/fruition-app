@@ -92,6 +92,30 @@ const FruitCard = ({ fruit, onDetails, onConsume, onDelete }) => {
                             <button
                                 onClick={() => {
                                     setMenuOpen(false);
+                                    if (fruit.onEdit) fruit.onEdit(fruit);
+                                }}
+                                style={{
+                                    width: '100%',
+                                    padding: '8px 12px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: 'white',
+                                    cursor: 'pointer',
+                                    fontSize: '0.85rem',
+                                    textAlign: 'left',
+                                    transition: 'background 0.2s'
+                                }}
+                                onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
+                                onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                            >
+                                <span style={{ fontSize: '14px' }}>✏️</span> Edit
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setMenuOpen(false);
                                     if (window.confirm(`Remove ${displayName}?`)) {
                                         onDelete(fruit.id);
                                     }
@@ -140,20 +164,21 @@ const FruitCard = ({ fruit, onDetails, onConsume, onDelete }) => {
             )}
 
             {/* Storage Indicator Badge */}
-            <div style={{
-                fontSize: '0.75rem',
-                color: 'rgba(255,255,255,0.7)',
-                marginTop: '6px',
-                padding: '2px 8px',
-                background: 'rgba(255,255,255,0.05)',
-                borderRadius: '12px',
-                display: 'inline-block',
-                border: '1px solid rgba(255,255,255,0.1)'
-            }}>
-                {fruit.storageMethod === 'Fridge' && '❄️ Fridge'}
-                {fruit.storageMethod === 'Pantry' && '🚪 Pantry'}
-                {(!fruit.storageMethod || fruit.storageMethod === 'Counter') && '🧺 Counter'}
-            </div>
+            {!fruit.hideStorage && (
+                <div style={{
+                    fontSize: '0.75rem',
+                    color: 'rgba(255,255,255,0.7)',
+                    marginTop: '6px',
+                    padding: '2px 8px',
+                    background: 'rgba(255,255,255,0.05)',
+                    borderRadius: '12px',
+                    display: 'inline-block',
+                    border: '1px solid rgba(255,255,255,0.1)'
+                }}>
+                    {fruit.storageMethod === 'Fridge' && '❄️ Fridge'}
+                    {fruit.storageMethod === 'Pantry' && '🚪 Pantry'}
+                    {(!fruit.storageMethod || fruit.storageMethod === 'Counter') && '🧺 Counter'}
+                </div>
             {/* Optional Subtitle for context like 'Added 2 days ago' */}
             {fruit.subtitle && (
                 <p style={{ fontSize: '0.75rem', color: 'var(--color-primary)', margin: '0.25rem 0 0', fontWeight: 500 }}>
