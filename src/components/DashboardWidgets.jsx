@@ -173,7 +173,7 @@ const DashboardWidgets = ({ fruits }) => {
             </div>
 
             {/* Widget 3: Freshness Forecast (Actionable) */}
-            <div className="dash-widget freshness-widget glass-panel">
+            <div className="dash-widget freshness-widget glass-panel" style={{ background: 'var(--color-surface-transparent)', borderColor: 'var(--glass-border)' }}>
                 <div className="widget-header">
                     {/* Freshness Alerts */}
                     <h3>Freshness Forecast</h3>
@@ -183,7 +183,7 @@ const DashboardWidgets = ({ fruits }) => {
                     {intelligence.expiringItems.length > 0 ? (
                         <div className="urgent-list">
                             {intelligence.expiringItems.slice(0, 2).map(fruit => (
-                                <div key={fruit.id} className="urgent-item">
+                                <div key={fruit.id} className="urgent-item" style={{ background: 'rgba(125,125,125,0.1)', color: 'var(--color-text)' }}>
                                     <AlertTriangle size={16} color="#FF4D4D" />
                                     <div>
                                         <span className="urgent-name">{fruit.daysRemaining === 0 ? 'Expired' : `Eat ${fruit.name}`}</span>
@@ -218,7 +218,7 @@ const DashboardWidgets = ({ fruits }) => {
                     </div>
                 </div>
 
-                <div className="intelligence-display glass-panel" style={{ marginTop: '0', background: 'rgba(0,0,0,0.2)' }}>
+                <div className="intelligence-display glass-panel" style={{ marginTop: '0', background: 'transparent', boxShadow: 'none', border: 'none' }}>
                     <div className="pulse-ticker-container" style={{ height: '160px', overflow: 'hidden', position: 'relative' }}>
                         <div className="pulse-ticker-content" style={{ display: 'flex', flexDirection: 'column', gap: '12px', animation: 'scrollUp 10s linear infinite' }}>
                             {feedEvents.length > 0 ? (

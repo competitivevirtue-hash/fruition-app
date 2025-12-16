@@ -79,3 +79,9 @@
 .dashboard-card p {
     color: var(--color-text-muted);
 }
+/* Forced Search Bar Override */
+.smart-search-input::placeholder {
+    color: var(--color-text) !important;
+    opacity: 0.8 !important;
+    font-weight: 500;
+}

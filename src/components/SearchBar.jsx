@@ -85,8 +85,10 @@ const SearchBar = ({ onFruitSelect, onSparkleClick }) => {
                         color: 'var(--color-text)',
                         fontSize: '1.1rem',
                         width: '100%',
-                        outline: 'none'
+                        outline: 'none',
+                        '::placeholder': { color: 'var(--color-text)', opacity: 1 } // Note: Inline styles don't support pseudos, but let's update the main style object just in case standard color applies
                     }}
+                    className="smart-search-input" // Add class for reliable CSS targeting
                     onFocus={() => {
                         if (query.length > 1) setShowResults(true);
                     }}
