@@ -150,13 +150,14 @@ const YearInFruit = ({ isOpen, onClose }) => {
                 onClick={nextSlide}
                 style={{
                     width: '100%', height: '100%',
-                    maxWidth: '450px', maxHeight: '800px', // Phone-like ratio
+                    maxWidth: '800px', maxHeight: '90vh', // Optimized for Desktop
                     background: currentBg,
                     position: 'relative',
                     display: 'flex', flexDirection: 'column',
                     padding: '2rem',
-                    cursor: 'pointer',
-                    borderRadius: '0px' // Full screen feel or card? Let's do huge card
+                    cursor: 'default', // Don't mistakenly think whole card is clickable if button logic exists
+                    borderRadius: '24px',
+                    boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)'
                 }}
             >
                 {/* Progress Bar */}
@@ -276,7 +277,7 @@ const YearInFruit = ({ isOpen, onClose }) => {
                                 </div>
 
                                 <div style={{ marginTop: '2rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)', textAlign: 'center', fontSize: '0.9rem', fontStyle: 'italic', opacity: 0.8 }}>
-                                    Member #{userProfile?.memberId || '?'} • Fruitopia 2025
+                                    Member #{userProfile?.memberId || '?'} • Fruition 2025
                                 </div>
                             </div>
 
@@ -284,7 +285,7 @@ const YearInFruit = ({ isOpen, onClose }) => {
                                 onClick={async () => {
                                     const shareData = {
                                         title: 'My 2025 in Fruit 🍎',
-                                        text: `I ate ${stats.totalItems} pieces of fruit this year! That's ${stats.totalCalories.toLocaleString()} calories of natural energy. #Fruitopia`,
+                                        text: `I ate ${stats.totalItems} pieces of fruit this year! That's ${stats.totalCalories.toLocaleString()} calories of natural energy. #FruitionApp`,
                                         url: window.location.href
                                     };
                                     try {

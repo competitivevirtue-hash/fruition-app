@@ -173,35 +173,33 @@ const Sidebar = ({ isOpen, onClose, currentView, onNavigate, onOpenSettings, onO
                     {!isCollapsed && "Profile"}
                 </button>
 
-                {!isMobile && (
-                    <button
-                        onClick={toggleCollapse}
-                        style={{
-                            marginTop: '1rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            padding: '10px',
-                            background: 'rgba(255,255,255,0.05)',
-                            color: 'var(--color-text-muted)',
-                            border: 'none',
-                            borderRadius: '12px',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s',
-                            alignSelf: isCollapsed ? 'center' : 'flex-end',
-                            width: isCollapsed ? 'auto' : '100%'
-                        }}
-                        onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
-                        onMouseLeave={(e) => e.target.style.background = 'rgba(255,255,255,0.05)'}
-                    >
-                        {isCollapsed ? <ChevronRight size={18} /> : (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <ChevronLeft size={18} />
-                                <span style={{ fontSize: '0.9rem' }}>Collapse</span>
-                            </div>
-                        )}
-                    </button>
-                )}
+                <button
+                    onClick={toggleCollapse}
+                    style={{
+                        marginTop: '1rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '10px',
+                        background: 'rgba(255,255,255,0.05)',
+                        color: 'var(--color-text-muted)',
+                        border: 'none',
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        alignSelf: isCollapsed ? 'center' : 'flex-end',
+                        width: isCollapsed ? 'auto' : '100%'
+                    }}
+                    onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
+                    onMouseLeave={(e) => e.target.style.background = 'rgba(255,255,255,0.05)'}
+                >
+                    {isCollapsed ? <ChevronRight size={18} /> : (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <ChevronLeft size={18} />
+                            <span style={{ fontSize: '0.9rem' }}>Collapse</span>
+                        </div>
+                    )}
+                </button>
             </div>
         </div>
     );
@@ -246,7 +244,9 @@ const Sidebar = ({ isOpen, onClose, currentView, onNavigate, onOpenSettings, onO
                             exit={{ x: '-100%' }}
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                             style={{
-                                position: 'fixed', top: 0, left: 0, bottom: 0, width: '280px', zIndex: 1000,
+                                position: 'fixed', top: 0, left: 0, bottom: 0,
+                                width: isCollapsed ? '80px' : '280px', // Dynamic Width on Mobile
+                                zIndex: 1000,
                                 background: 'var(--color-surface)', // Dynamic surface color (Light/Dark aware)
                                 borderRadius: 0
                             }}

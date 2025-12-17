@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useNotifications } from '../context/NotificationContext'; // Added Import
 import { db } from '../firebase';
 import { collection, query, where, getDocs, updateDoc, doc, getCountFromServer, limit, orderBy, collectionGroup } from 'firebase/firestore';
 import { motion } from 'framer-motion';
@@ -11,6 +12,7 @@ import { Users, Search, Shield, AlertTriangle, Ban, CheckCircle, Activity, Lock,
 
 const AdminDashboard = () => {
     const { currentUser, isAdmin } = useAuth();
+    const { notifications, unreadCount, markAsRead, clearAll } = useNotifications(); // Added Hook
     const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);
@@ -26,6 +28,9 @@ const AdminDashboard = () => {
     const [selectedUser, setSelectedUser] = useState(null);
     const [showMap, setShowMap] = useState(false);
     const [showYearInFruit, setShowYearInFruit] = useState(false);
+
+    // Notification Dropdown State
+    const [showNotifications, setShowNotifications] = useState(false);
 
     const [showSafeMode, setShowSafeMode] = useState(true); // Prevents accidental self-bans
     const [logs, setLogs] = useState([]);
@@ -235,9 +240,58 @@ const AdminDashboard = () => {
                     </div>
                 </div>
                 <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <button className="btn" style={{ padding: '10px', background: 'var(--glass-background)', borderRadius: '50%' }}>
-                        <Bell size={20} color="var(--color-text)" />
-                    </button>
+
+                    {/* Notification Bell */}
+                    <div style={{ position: 'relative' }}>
+                        <button
+                            className="btn"
+                            onClick={() => setShowNotifications(!showNotifications)}
+                            style={{ padding: '10px', background: 'var(--glass-background)', borderRadius: '50%', position: 'relative' }}
+                        >
+                            <Bell size={20} color="var(--color-text)" />
+                            {unreadCount > 0 && (
+                                <div style={{
+                                    position: 'absolute', top: -2, right: -2,
+                                    background: '#ef4444', color: 'white',
+                                    fontSize: '0.7rem', width: '18px', height: '18px',
+                                    borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    fontWeight: 'bold'
+                                }}>{unreadCount}</div>
+                            )}
+                        </button>
+
+                        {/* Dropdown */}
+                        {showNotifications && (
+                            <div style={{
+                                position: 'absolute', top: '120%', right: 0,
+                                width: '300px', maxHeight: '400px', overflowY: 'auto',
+                                background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)',
+                                borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+                                zIndex: 1000, padding: '0.5rem'
+                            }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', marginBottom: '0.5rem' }}>
+                                    <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>Notifications</span>
+                                    <button onClick={clearAll} style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.8rem', cursor: 'pointer' }}>Clear All</button>
+                                </div>
+                                {notifications.length === 0 ? (
+                                    <div style={{ padding: '1rem', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>No notifications</div>
+                                ) : (
+                                    notifications.map(note => (
+                                        <div key={note.id} onClick={() => markAsRead(note.id)} style={{
+                                            padding: '0.75rem', borderRadius: '8px', marginBottom: '4px',
+                                            background: note.read ? 'transparent' : 'rgba(255,255,255,0.05)',
+                                            cursor: 'pointer', transition: 'background 0.2s'
+                                        }}>
+                                            <div style={{ fontWeight: '600', fontSize: '0.9rem', marginBottom: '2px', color: note.type === 'danger' ? '#ef4444' : 'var(--color-text)' }}>{note.title}</div>
+                                            <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{note.body}</div>
+                                            <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', marginTop: '4px' }}>{new Date(note.timestamp).toLocaleTimeString()}</div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        )}
+                    </div>
+
                     <div style={{ fontSize: '0.9rem', color: '#ef4444', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(239, 68, 68, 0.1)', padding: '6px 12px', borderRadius: '20px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
                         <div style={{ width: 8, height: 8, background: '#ef4444', borderRadius: '50%', boxShadow: '0 0 10px #ef4444' }} /> LIVE SYSTEM
                     </div>

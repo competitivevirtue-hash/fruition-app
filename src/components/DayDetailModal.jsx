@@ -34,10 +34,13 @@ const DayDetailModal = ({ date, events, onClose, onAddFruit }) => {
                         flexDirection: 'column',
                         padding: '0', // Reset padding
                         borderRadius: '24px',
-                        background: 'rgba(20, 20, 23, 0.85)', // Darker glass for contrast
+                        // background: 'rgba(20, 20, 23, 0.85)', // Removed to fix Light Theme contrast
+                        // backdropFilter: 'blur(20px)',
+                        background: 'var(--glass-background)',
                         backdropFilter: 'blur(20px)',
                         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)'
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        color: 'var(--color-text)' // Ensure text matches theme
                     }}
                 >
                     {/* Compact Header */}

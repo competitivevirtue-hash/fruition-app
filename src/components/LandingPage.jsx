@@ -80,7 +80,6 @@ const LandingPage = () => {
             <section className="features-section">
                 <div className="section-header">
                     <h2>Why Fruition?</h2>
-                    <p>Science meets design in your pocket.</p>
                 </div>
 
                 <div className="feature-grid">
