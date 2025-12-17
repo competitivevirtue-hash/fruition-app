@@ -6,6 +6,17 @@ import { Palette, Zap, Droplet, Heart, Shield, Activity, Search, Sparkles, BookO
 import { getRandomFruitFact, getSmartSearchFact } from '../utils/aiService';
 import { getFruitImage } from '../utils/fruitUtils';
 
+// Helper functions moved to top to avoid hoisting issues
+const getColorCategory = (fruit) => {
+    if (fruit.color) return fruit.color;
+    return 'Other';
+};
+
+const getBenefitCategory = (fruit) => {
+    if (fruit.benefit) return fruit.benefit;
+    return 'General Wellbeing';
+};
+
 const Fruitcyclopedia = ({ onFruitSelect }) => {
     const [sortMode, setSortMode] = useState('shuffle'); // 'shuffle', 'asc', 'desc'
     const [filterMode, setFilterMode] = useState('all');
@@ -379,18 +390,6 @@ const Fruitcyclopedia = ({ onFruitSelect }) => {
             </AnimatePresence>
         </div>
     );
-};
-
-const getColorCategory = (fruit) => {
-    // Basic color mapping based on likely fruit colors if not explicit
-    // Use fruit.color if available, else guess or 'Other'
-    if (fruit.color) return fruit.color;
-    return 'Other';
-};
-
-const getBenefitCategory = (fruit) => {
-    if (fruit.benefit) return fruit.benefit;
-    return 'General Wellbeing';
 };
 
 export default Fruitcyclopedia;
