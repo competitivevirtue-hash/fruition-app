@@ -8,6 +8,7 @@ import { getFruitImage } from '../utils/fruitUtils';
 
 const Fruitcyclopedia = ({ onFruitSelect }) => {
     const [sortMode, setSortMode] = useState('shuffle'); // 'shuffle', 'asc', 'desc'
+    const [filterMode, setFilterMode] = useState('all'); // Restoring missing state
     const [shuffledFruits, setShuffledFruits] = useState([]);
 
     // Shuffle on mount

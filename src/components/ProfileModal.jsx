@@ -166,7 +166,7 @@ const ProfileModal = ({ isOpen, onClose, onOpenHousehold }) => {
                         exit={{ y: 50, opacity: 0 }}
 
                         onClick={(e) => e.stopPropagation()}
-                        style={{ maxWidth: '450px', width: '90%', maxHeight: '85vh', overflowY: 'auto', margin: 'auto' }}
+                        style={{ maxWidth: '450px', width: '90%', height: 'auto', maxHeight: '85vh', overflowY: 'auto', margin: 'auto' }}
                     >
                         <button className="close-btn" onClick={onClose}>
                             <X size={24} />

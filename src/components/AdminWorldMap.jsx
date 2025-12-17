@@ -27,9 +27,31 @@ const AdminWorldMap = ({ isOpen, onClose }) => {
                 },
                 (error) => {
                     console.warn("GPS Access Denied/Error:", error);
-                    // Could set a default 'viewer' mode here without a 'YOU' dot
+                    // Fallback to IP Geolocation
+                    fetch('https://ipapi.co/json/')
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.latitude && data.longitude) {
+                                const loc = { lat: data.latitude, lng: data.longitude };
+                                setMyLocation(loc);
+                                updateLastActive(loc);
+                            }
+                        })
+                        .catch(err => console.error("IP Geoloc failed:", err));
                 }
             );
+        } else {
+            // Fallback for non-geo browsers
+            fetch('https://ipapi.co/json/')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.latitude && data.longitude) {
+                        const loc = { lat: data.latitude, lng: data.longitude };
+                        setMyLocation(loc);
+                        updateLastActive(loc);
+                    }
+                })
+                .catch(err => console.error("IP Geoloc failed:", err));
         }
     }, [isOpen, updateLastActive]);
 
