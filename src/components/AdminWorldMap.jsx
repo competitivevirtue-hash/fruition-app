@@ -6,7 +6,7 @@ import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { db } from '../firebase';
 
 const AdminWorldMap = ({ isOpen, onClose }) => {
-    const { updateLastActive } = useAuth();
+    const { updateLastActive, currentUser } = useAuth();
     const [myLocation, setMyLocation] = useState(null);
     const [activeUsers, setActiveUsers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -197,34 +197,56 @@ const AdminWorldMap = ({ isOpen, onClose }) => {
                             opacity: 0.3
                         }} />
 
-                        {/* Real User Dots */}
-                        {activeUsers.map(user => {
-                            const { x, y } = project(user.location.lat, user.location.lng);
-                            const isMe = myLocation && Math.abs(user.location.lat - myLocation.lat) < 0.01 && Math.abs(user.location.lng - myLocation.lng) < 0.01;
+                        {/* Real User Dots (Others) */}
+                        {activeUsers
+                            .filter(u => !currentUser || u.id !== currentUser.uid)
+                            .map(user => {
+                                const { x, y } = project(user.location.lat, user.location.lng);
+                                return (
+                                    <div
+                                        key={user.id}
+                                        style={{
+                                            position: 'absolute',
+                                            left: `${x}%`,
+                                            top: `${y}%`,
+                                            transform: 'translate(-50%, -50%)',
+                                            zIndex: 10
+                                        }}
+                                    >
+                                        <div className="map-user-dot">
+                                            <div className="dot-core" />
+                                            <div className="dot-ring" />
+                                            <div className="dot-label">User</div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
 
+                        {/* MY Location Dot (Local State - Instant) */}
+                        {myLocation && (() => {
+                            const { x, y } = project(myLocation.lat, myLocation.lng);
                             return (
                                 <div
-                                    key={user.id}
                                     style={{
                                         position: 'absolute',
-                                        left: `${x}% `,
-                                        top: `${y}% `,
+                                        left: `${x}%`,
+                                        top: `${y}%`,
                                         transform: 'translate(-50%, -50%)',
-                                        zIndex: isMe ? 20 : 10
+                                        zIndex: 20
                                     }}
                                 >
-                                    <div className={`map-user-dot ${isMe ? 'is-me' : ''}`}>
+                                    <div className="map-user-dot is-me">
                                         <div className="dot-core" />
                                         <div className="dot-ring" />
-                                        {isMe && <div className="dot-radar" />}
+                                        <div className="dot-radar" />
                                         <div className="dot-label">
-                                            {isMe && <Navigation size={10} style={{ marginRight: 4 }} />}
-                                            {isMe ? "YOU" : "User"}
+                                            <Navigation size={10} style={{ marginRight: 4 }} />
+                                            YOU
                                         </div>
                                     </div>
                                 </div>
                             );
-                        })}
+                        })()}
                     </div>
 
                     {/* Coordinates Display */}
