@@ -73,17 +73,12 @@ const AdminWorldMap = ({ isOpen, onClose }) => {
                 const snapshot = await getDocs(q);
                 let users = snapshot.docs
                     .map(doc => ({ id: doc.id, ...doc.data() }))
-                    .filter(u => u.location && u.location.lat !== 0 && u.location.lng !== 0); // Only users with valid location data (exclude 0,0)
-
-                // FALLBACK FOR DEV: If no users (or only me without location), add a fake "Server Node"
-                // so the map isn't depressing to look at.
-                if (users.length === 0) {
-                    users = [{
-                        id: 'system-node-1',
-                        location: { lat: 20.0, lng: 0.0 }, // Middle of the map roughly
-                        isSystemNode: true
-                    }];
-                }
+                    .filter(u =>
+                        u.location &&
+                        typeof u.location.lat === 'number' &&
+                        typeof u.location.lng === 'number' &&
+                        (u.location.lat !== 0 || u.location.lng !== 0) // Exclude absolute zero if it implies missing data
+                    );
 
                 setActiveUsers(users);
             } catch (err) {

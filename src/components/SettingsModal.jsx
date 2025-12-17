@@ -202,8 +202,8 @@ const SettingsModal = ({ isOpen, onClose, currentTheme, onThemeChange, currentLa
                         </Section>
 
                         <Section title="Legal">
-                            <MenuLink icon={FileText} label="Privacy Policy" onClick={() => { }} />
-                            <MenuLink icon={FileText} label="Terms of Service" onClick={() => { }} />
+                            <MenuLink icon={FileText} label="Privacy Policy" onClick={() => window.location.hash = '#/privacy'} />
+                            <MenuLink icon={FileText} label="Terms of Service" onClick={() => window.location.hash = '#/terms'} />
                             <MenuLink icon={FileText} label="Open Source Licenses" onClick={() => { }} />
                         </Section>
 
