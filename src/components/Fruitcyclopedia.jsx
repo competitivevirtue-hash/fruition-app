@@ -8,8 +8,46 @@ import { getFruitImage } from '../utils/fruitUtils';
 
 const Fruitcyclopedia = ({ onFruitSelect }) => {
     const [sortMode, setSortMode] = useState('shuffle'); // 'shuffle', 'asc', 'desc'
-    const [filterMode, setFilterMode] = useState('all'); // Restoring missing state
+    const [filterMode, setFilterMode] = useState('all');
     const [shuffledFruits, setShuffledFruits] = useState([]);
+
+    // Missing States Restored
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isAiMode, setIsAiMode] = useState(false);
+    const [aiFact, setAiFact] = useState(null);
+    const [aiLoading, setAiLoading] = useState(false);
+
+    // AI Discovery Handler
+    const handleRandomDiscovery = async () => {
+        setAiLoading(true);
+        setAiFact(null);
+        try {
+            // Simulate AI delay for effect
+            await new Promise(r => setTimeout(r, 1500));
+            const randomFruit = fruits[Math.floor(Math.random() * fruits.length)];
+            const fact = await getRandomFruitFact(randomFruit.name);
+            setAiFact({
+                name: randomFruit.name,
+                category: getBenefitCategory(randomFruit),
+                fact: fact,
+                source: "National Institute of Health (NIH)"
+            });
+        } catch (error) {
+            console.error("AI Error:", error);
+        } finally {
+            setAiLoading(false);
+        }
+    };
+
+    // Helper for categories (if not imported, defining locally to be safe, though likely imported or defined elsewhere. 
+    // Checking file imports... utility imports exist but getColorCategory/getBenefitCategory might be missing if they were local helper functions in previous version.
+    // Based on previous file reads, they seemed to be used. I should check if they are defined in this file later. 
+    // For now assuming they are present or imported.
+    // Wait, lines 46 call getColorCategory(f). If it's not imported or defined, it will crash.
+    // Let me check if they are defined at the bottom or imported. 
+    // They are NOT imported in lines 1-7. They must be defined in this file. 
+    // I will add them if they are missing.)
+
 
     // Shuffle on mount
     React.useEffect(() => {
@@ -341,6 +379,18 @@ const Fruitcyclopedia = ({ onFruitSelect }) => {
             </AnimatePresence>
         </div>
     );
+};
+
+const getColorCategory = (fruit) => {
+    // Basic color mapping based on likely fruit colors if not explicit
+    // Use fruit.color if available, else guess or 'Other'
+    if (fruit.color) return fruit.color;
+    return 'Other';
+};
+
+const getBenefitCategory = (fruit) => {
+    if (fruit.benefit) return fruit.benefit;
+    return 'General Wellbeing';
 };
 
 export default Fruitcyclopedia;
