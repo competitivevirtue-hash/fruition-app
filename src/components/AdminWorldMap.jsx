@@ -73,7 +73,7 @@ const AdminWorldMap = ({ isOpen, onClose }) => {
                 const snapshot = await getDocs(q);
                 let users = snapshot.docs
                     .map(doc => ({ id: doc.id, ...doc.data() }))
-                    .filter(u => u.location); // Only users with location data
+                    .filter(u => u.location && u.location.lat !== 0 && u.location.lng !== 0); // Only users with valid location data (exclude 0,0)
 
                 // FALLBACK FOR DEV: If no users (or only me without location), add a fake "Server Node"
                 // so the map isn't depressing to look at.
