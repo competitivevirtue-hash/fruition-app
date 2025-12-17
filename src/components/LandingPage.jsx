@@ -4,8 +4,19 @@ import { ArrowRight, Activity, Zap, Shield, CheckCircle } from 'lucide-react';
 import Logo from './Logo';
 import './LandingPage.css';
 
+import { useAuth } from '../context/AuthContext';
+
 const LandingPage = () => {
     const navigate = useNavigate();
+    const { currentUser, logout } = useAuth();
+
+    const handleCtaClick = () => {
+        if (currentUser) {
+            navigate('/dashboard');
+        } else {
+            navigate('/dashboard', { state: { openLogin: true } });
+        }
+    };
 
     return (
         <div className="landing-page">
@@ -16,8 +27,17 @@ const LandingPage = () => {
                     <span className="brand-name">Fruition</span>
                 </div>
                 <div className="nav-links">
-                    <button className="nav-btn" onClick={() => navigate('/dashboard', { state: { openLogin: true } })}>Login</button>
-                    <button className="nav-btn primary" onClick={() => navigate('/dashboard', { state: { openLogin: true } })}>Get Started</button>
+                    {currentUser ? (
+                        <>
+                            <button className="nav-btn" onClick={logout}>Sign Out</button>
+                            <button className="nav-btn primary" onClick={() => navigate('/dashboard')}>Dashboard</button>
+                        </>
+                    ) : (
+                        <>
+                            <button className="nav-btn" onClick={() => navigate('/dashboard', { state: { openLogin: true } })}>Login</button>
+                            <button className="nav-btn primary" onClick={() => navigate('/dashboard', { state: { openLogin: true } })}>Get Started</button>
+                        </>
+                    )}
                 </div>
             </nav>
 
@@ -32,8 +52,8 @@ const LandingPage = () => {
                         Don't just count calories. Connect with your food.
                         Track freshness, bio-impact, and color diversity in one beautiful space.
                     </p>
-                    <button className="cta-btn" onClick={() => navigate('/dashboard', { state: { openLogin: true } })}>
-                        Start Your Journey <ArrowRight size={20} />
+                    <button className="cta-btn" onClick={handleCtaClick}>
+                        {currentUser ? 'Go to Dashboard' : 'Start Your Journey'} <ArrowRight size={20} />
                     </button>
                 </div>
 
