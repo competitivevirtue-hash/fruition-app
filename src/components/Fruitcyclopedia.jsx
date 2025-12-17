@@ -7,51 +7,37 @@ import { getRandomFruitFact, getSmartSearchFact } from '../utils/aiService';
 import { getFruitImage } from '../utils/fruitUtils';
 
 const Fruitcyclopedia = ({ onFruitSelect }) => {
-    const [filterMode, setFilterMode] = useState('all'); // 'all', 'color', 'benefit'
-    const [searchQuery, setSearchQuery] = useState('');
-    const [isAiMode, setIsAiMode] = useState(false);
-    const [aiFact, setAiFact] = useState(null);
-    const [aiLoading, setAiLoading] = useState(false);
+    const [sortMode, setSortMode] = useState('shuffle'); // 'shuffle', 'asc', 'desc'
+    const [shuffledFruits, setShuffledFruits] = useState([]);
 
-    // Helper to get color category
-    const getColorCategory = (fruit) => {
-        // Mock logic - in real app would use db tags
-        const name = fruit.name.toLowerCase();
-        if (['apple', 'cherry', 'strawberry', 'raspberry', 'pomegranate'].some(n => name.includes(n))) return 'Red';
-        if (['banana', 'lemon', 'pineapple', 'mango'].some(n => name.includes(n))) return 'Yellow';
-        if (['orange', 'peach', 'papaya', 'apricot', 'cantaloupe'].some(n => name.includes(n))) return 'Orange';
-        if (['lime', 'kiwi', 'pear', 'grape', 'avocado'].some(n => name.includes(n))) return 'Green';
-        if (['blueberry', 'plum', 'grape', 'eggplant'].some(n => name.includes(n))) return 'Blue/Purple';
-        return 'Other';
-    };
+    // Shuffle on mount
+    React.useEffect(() => {
+        const shuffled = [...fruits].sort(() => 0.5 - Math.random());
+        setShuffledFruits(shuffled);
+    }, []);
 
-    // Helper to get benefit category (Mock)
-    const getBenefitCategory = (fruit) => {
-        const id = fruit.id % 4;
-        if (id === 0) return 'Energy Boosters';
-        if (id === 1) return 'Immunity Defenders';
-        if (id === 2) return 'Heart Health';
-        return 'Digestion & Gut';
-    };
-
-    const handleRandomDiscovery = async () => {
-        setAiLoading(true);
-        setAiFact(null);
-        try {
-            const fact = await getRandomFruitFact();
-            setAiFact(fact);
-        } catch (error) {
-            console.error("AI Error", error);
-        } finally {
-            setAiLoading(false);
+    const handleSortChange = (mode) => {
+        setSortMode(mode);
+        if (mode === 'shuffle') {
+            setShuffledFruits([...fruits].sort(() => 0.5 - Math.random()));
         }
     };
 
     const sections = (() => {
+        // Base list selection
+        let baseList = sortMode === 'shuffle' ? shuffledFruits : fruits;
+
         // Filter fruits first based on search query
-        const filteredFruits = fruits.filter(f =>
+        let filteredFruits = baseList.filter(f =>
             f.name.toLowerCase().includes(searchQuery.toLowerCase())
         );
+
+        // Apply specific sorting if not shuffle (since shuffle is pre-calculated)
+        if (sortMode === 'asc') {
+            filteredFruits.sort((a, b) => a.name.localeCompare(b.name));
+        } else if (sortMode === 'desc') {
+            filteredFruits.sort((a, b) => b.name.localeCompare(a.name));
+        }
 
         if (filterMode === 'color') {
             const groups = {};
@@ -82,7 +68,7 @@ const Fruitcyclopedia = ({ onFruitSelect }) => {
     })();
 
     return (
-        <div style={{ padding: '2rem', paddingTop: '6rem', paddingBottom: '6rem' }}>
+        <div style={{ padding: '2rem', paddingBottom: '6rem' }}>
 
             {/* Header & Toggle */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
@@ -112,21 +98,32 @@ const Fruitcyclopedia = ({ onFruitSelect }) => {
                     {!isAiMode && (
                         <>
                             <div style={{ width: '1px', height: '20px', background: 'var(--color-border)', margin: '0 4px' }} />
-                            <button
-                                onClick={() => setFilterMode('all')}
-                                style={{
-                                    padding: '0.5rem 1rem',
-                                    border: 'none',
-                                    background: filterMode === 'all' ? 'var(--color-primary)' : 'transparent',
-                                    color: filterMode === 'all' ? 'white' : 'var(--color-text-muted)',
-                                    borderRadius: '8px',
-                                    cursor: 'pointer',
-                                    fontWeight: 500
-                                }}
-                            >
-                                All
-                            </button>
-                            {/* Color/Benefit Buttons omitted for brevity when AI is off, or kept. Keeping for standard nav. */}
+                            {/* Sort Toggles */}
+                            <div style={{ display: 'flex', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', padding: '2px' }}>
+                                <button
+                                    onClick={() => handleSortChange('shuffle')}
+                                    title="Shuffle"
+                                    style={{
+                                        padding: '6px 10px', border: 'none', borderRadius: '6px', cursor: 'pointer',
+                                        background: sortMode === 'shuffle' ? 'var(--color-primary)' : 'transparent',
+                                        color: sortMode === 'shuffle' ? 'white' : 'var(--color-text-muted)'
+                                    }}
+                                >
+                                    🔀
+                                </button>
+                                <button
+                                    onClick={() => handleSortChange('asc')}
+                                    title="A-Z"
+                                    style={{
+                                        padding: '6px 10px', border: 'none', borderRadius: '6px', cursor: 'pointer',
+                                        background: sortMode === 'asc' ? 'var(--color-primary)' : 'transparent',
+                                        color: sortMode === 'asc' ? 'white' : 'var(--color-text-muted)',
+                                        fontSize: '0.8rem', fontWeight: 'bold'
+                                    }}
+                                >
+                                    A-Z
+                                </button>
+                            </div>
                         </>
                     )}
                 </div>
@@ -256,7 +253,8 @@ const Fruitcyclopedia = ({ onFruitSelect }) => {
                                         left: '1rem',
                                         top: '50%',
                                         transform: 'translateY(-50%)',
-                                        color: 'var(--color-text-muted)'
+                                        color: 'var(--color-text)', // Fixed contrast
+                                        opacity: 1 // Remove blur/opacity issue
                                     }}
                                 />
                                 <input
