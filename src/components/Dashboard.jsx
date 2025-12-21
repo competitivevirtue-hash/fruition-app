@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import Layout from './Layout';
 import FruitCard from './FruitCard';
 import FruitcyclopediaModal from './FruitcyclopediaModal';
@@ -407,6 +408,42 @@ const Dashboard = () => {
                 isOpen={isStatsOpen}
                 onClose={() => setIsStatsOpen(false)}
             />
+            {/* Floating Action Button (FAB) - Always Visible */}
+            <AnimatePresence>
+                {user && (currentView === 'dashboard' || currentView === 'my-fruits' || currentView === 'calendar') && (
+                    <motion.button
+                        initial={{ scale: 0, rotate: 180 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        exit={{ scale: 0, rotate: -180 }}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => {
+                            setAddFruitDate(null);
+                            setIsAddFruitOpen(true);
+                        }}
+                        style={{
+                            position: 'fixed',
+                            bottom: '2rem',
+                            right: '2rem',
+                            width: '64px',
+                            height: '64px',
+                            borderRadius: '50%',
+                            background: 'var(--color-primary)',
+                            color: 'white',
+                            border: 'none',
+                            boxShadow: '0 8px 30px rgba(255, 77, 77, 0.4)',
+                            zIndex: 100,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer'
+                        }}
+                        aria-label={t('addFruit')}
+                    >
+                        <Plus size={32} strokeWidth={2.5} />
+                    </motion.button>
+                )}
+            </AnimatePresence>
         </Layout >
     );
 }

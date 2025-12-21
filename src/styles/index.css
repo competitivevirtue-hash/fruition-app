@@ -1,27 +1,32 @@
 :root {
-    /* Brand Colors */
-    --color-primary: #E11D48;
-    /* Rose 600 */
-    --color-primary-hover: #BE123C;
-    /* Rose 700 */
-    --color-secondary: #F59E0B;
-    /* Default Dark Theme (Space/Night Vibe) */
-    --color-background: #131314;
-    /* Premium Dark Gray */
-    /* Lighter Gray for depth */
-    --color-primary-dark: #FF4D4D;
-    /* Red Apple */
-    --color-secondary-dark: #4ADE80;
-    /* Green Leaf */
-    --color-accent: #FDB813;
-    /* Golden Sun */
-    --color-text: #ffffff;
-    --color-text-muted: #a1a1aa;
-    --color-border: rgba(255, 255, 255, 0.1);
+    /* Brand Colors - Organic Modern */
+    --color-primary: #FF4D4D;
+    /* Fresh Apple Red */
+    --color-primary-hover: #D93838;
+    --color-secondary: #FBBF24;
+    /* Sun Gold */
+    --color-accent: #8B5CF6;
+    /* Playful Purple for accents */
 
-    --glass-background: rgba(255, 255, 255, 0.05);
-    --glass-border: rgba(255, 255, 255, 0.1);
-    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    /* Default Theme: Organic Light (Cream/Paper) */
+    --color-background: #FDFBF7;
+    /* Warm Cream */
+    --color-surface: #FFFFFF;
+    /* Pure White Card */
+    --color-text: #1E1E24;
+    /* Soft Charcoal */
+    --color-text-muted: #64748B;
+    /* Slate 500 */
+    --color-border: rgba(0, 0, 0, 0.06);
+
+    --glass-background: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.5);
+    --glass-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+
+    --color-surface-transparent: rgba(255, 255, 255, 0.6);
+
+    /* Background Gradient (Subtle Warmth) */
+    --background-gradient: linear-gradient(135deg, #FDFBF7 0%, #F5F3EC 100%);
 
     /* Typography */
     --font-heading: 'Outfit', sans-serif;
@@ -33,56 +38,41 @@
     --spacing-lg: 1.5rem;
     --spacing-xl: 2rem;
 
-    --radius-sm: 0.375rem;
-    --radius-md: 0.75rem;
-    --radius-lg: 1rem;
+    --radius-sm: 0.5rem;
+    /* Softened */
+    --radius-md: 1rem;
+    /* Playful Roundness */
+    --radius-lg: 1.5rem;
     --radius-full: 9999px;
-    --color-surface-transparent: rgba(19, 19, 20, 0.7);
-
-    /* Dark Gradient Default */
-    --background-gradient: linear-gradient(135deg, #131314 0%, #1e1e24 100%);
 }
 
-/* Light Mode (Vibrant Fruition) */
+/* Light Mode (Explicit) */
 .light-mode {
-    --color-background: #ffffff;
-    --color-surface: #ffffff;
-    --color-primary: #E11D48;
-    /* Energetic Red/Pink */
-    --color-secondary: #F59E0B;
-    /* Vibrant Orange */
-    --color-accent: #8B5CF6;
-    /* Playful Purple */
-    --color-text: #1f2937;
-    --color-text-muted: #6b7280;
-    --color-border: rgba(0, 0, 0, 0.08);
-
+    --color-background: #FDFBF7;
+    --color-surface: #FFFFFF;
+    --color-text: #1E1E24;
+    --color-text-muted: #64748B;
+    --color-border: rgba(0, 0, 0, 0.06);
     --glass-background: rgba(255, 255, 255, 0.7);
-    --glass-border: rgba(255, 255, 255, 0.4);
-    --glass-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-    --color-surface-transparent: rgba(255, 255, 255, 0.6);
-
-    /* Vibrant Override */
-    --background-gradient: linear-gradient(120deg, #fdfbfb 0%, #ebedee 100%);
+    --background-gradient: linear-gradient(135deg, #FDFBF7 0%, #F5F3EC 100%);
 }
 
-/* Explicit Dark Mode */
+/* Dark Mode (Deep Night, not Void) */
 .dark-mode {
-    --color-background: #131314;
-    --color-surface: #28292A;
-    --color-primary: #FF4D4D;
-    --color-secondary: #4ADE80;
-    --color-accent: #FDB813;
-    --color-text: #ffffff;
-    --color-text-muted: #a1a1aa;
+    --color-background: #1E1E24;
+    /* Deep Charcoal */
+    --color-surface: #2D2D35;
+    /* Lighter Charcoal */
+    --color-text: #F1F5F9;
+    --color-text-muted: #94A3B8;
     --color-border: rgba(255, 255, 255, 0.1);
 
-    --glass-background: rgba(255, 255, 255, 0.05);
+    --glass-background: rgba(30, 30, 36, 0.7);
     --glass-border: rgba(255, 255, 255, 0.1);
-    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-    --color-surface-transparent: rgba(40, 41, 42, 0.7);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    --color-surface-transparent: rgba(45, 45, 53, 0.7);
 
-    --background-gradient: linear-gradient(135deg, #131314 0%, #1e1e24 100%);
+    --background-gradient: linear-gradient(135deg, #1E1E24 0%, #151518 100%);
 }
 
 * {

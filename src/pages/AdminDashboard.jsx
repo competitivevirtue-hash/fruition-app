@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import AdminWorldMap from '../components/AdminWorldMap';
 import YearInFruit from '../components/YearInFruit';
-import { Users, Search, Shield, AlertTriangle, Ban, CheckCircle, Activity, Lock, ChevronLeft, Bell, Globe, Zap, BarChart3, DollarSign, Utensils } from 'lucide-react';
+import { Users, Search, Shield, AlertTriangle, Ban, CheckCircle, Activity, Lock, ChevronLeft, Bell, Globe, Zap, BarChart3, DollarSign, Utensils, Crown } from 'lucide-react';
 
 const AdminDashboard = () => {
     const { currentUser, isAdmin } = useAuth();

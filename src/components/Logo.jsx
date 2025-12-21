@@ -8,8 +8,8 @@ const Logo = ({ size = 40, className = "", animated = false }) => {
             style={{ width: size, height: size, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
             <motion.img
-                src="/fruition-logo.png"
-                alt="Fruition Logo"
+                src="/logo.png"
+                alt="Fruitcyclopedia Logo"
                 style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                 initial={animated ? { scale: 0, opacity: 0, rotate: -180 } : {}}
                 animate={animated ? { scale: 1, opacity: 1, rotate: 0 } : {}}
