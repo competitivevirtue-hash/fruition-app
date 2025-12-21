@@ -8,25 +8,28 @@ import TermsOfService from './components/TermsOfService';
 import { AuthProvider } from './context/AuthContext';
 import { FruitProvider } from './context/FruitContext.jsx';
 import { NotificationProvider } from './context/NotificationContext';
+import { StreakProvider } from './context/StreakContext'; // [NEW]
 import './App.css';
 
 function App() {
   return (
     <AuthProvider>
       <FruitProvider>
-        <NotificationProvider>
-          <Router>
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/dashboard/*" element={<Dashboard />} />
-              <Route path="/home" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/achievements" element={<AchievementsPage />} />
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/privacy" element={<PrivacyPolicy />} />
-              <Route path="/terms" element={<TermsOfService />} />
-            </Routes>
-          </Router>
-        </NotificationProvider>
+        <StreakProvider>
+          <NotificationProvider>
+            <Router>
+              <Routes>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/dashboard/*" element={<Dashboard />} />
+                <Route path="/home" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/achievements" element={<AchievementsPage />} />
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/terms" element={<TermsOfService />} />
+              </Routes>
+            </Router>
+          </NotificationProvider>
+        </StreakProvider>
       </FruitProvider>
     </AuthProvider>
   );

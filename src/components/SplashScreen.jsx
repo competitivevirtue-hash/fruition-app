@@ -59,7 +59,7 @@ const SplashScreen = ({ onComplete }) => {
                         style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
                     >
                         <Logo size={120} animated={true} className="mb-4" />
-                        <h1 className="splash-title text-gradient" style={{ marginTop: '1rem' }}>Fruition</h1>
+                        <h1 className="splash-title text-gradient" style={{ marginTop: '1rem' }}>Fruitcyclopedia</h1>
                         <motion.p
                             className="splash-subtitle"
                             initial={{ opacity: 0 }}

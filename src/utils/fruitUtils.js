@@ -55,11 +55,81 @@ export const COLOR_DEFINITIONS = {
     purple: "Of a colour intermediate between red and blue; indicating a high concentration of powerful antioxidants known as anthocyanins, crucial for cognitive function and memory."
 };
 
+// --- BADGES --- //
 export const BADGES = [
-    { id: 'eco', name: 'Eco Warrior', desc: '> 90% efficiency', icon: '🌍', color: '#10b981', condition: (p) => p.efficiency > 90 && p.totalProcessed > 10 },
-    { id: 'ninja', name: 'Fruit Ninja', desc: '50+ fruits eaten', icon: '🥷', color: '#f59e0b', condition: (p) => p.totalConsumed >= 50 },
-    { id: 'starter', name: 'Fresh Start', desc: 'First fruit logged', icon: '🌱', color: '#3b82f6', condition: (p) => p.totalConsumed > 0 },
-    { id: 'master', name: 'Zen Master', desc: 'Zero waste for 7 days', icon: '🧘', color: '#8b5cf6', condition: () => false }
+    {
+        id: 'starter',
+        name: 'Fresh Start',
+        desc: 'Log your first fruit',
+        icon: '🌱',
+        color: '#3b82f6',
+        condition: (p) => p.totalConsumed > 0
+    },
+    {
+        id: 'ninja',
+        name: 'Fruit Ninja',
+        desc: 'Eat 50 fruits total',
+        icon: '🥷',
+        color: '#f59e0b',
+        condition: (p) => p.totalConsumed >= 50
+    },
+    {
+        id: 'eco',
+        name: 'Eco Warrior',
+        desc: '> 90% efficiency (min 10 fruits)',
+        icon: '🌍',
+        color: '#10b981',
+        condition: (p) => p.efficiency >= 90 && p.totalProcessed >= 10
+    },
+    {
+        id: 'streak_3',
+        name: 'Habit Former',
+        desc: '3 Day Streak',
+        icon: '🔥',
+        color: '#FF4500',
+        condition: (p) => p.streak >= 3
+    },
+    {
+        id: 'streak_7',
+        name: 'Unstoppable',
+        desc: '7 Day Streak',
+        icon: '🚀',
+        color: '#8b5cf6',
+        condition: (p) => p.streak >= 7
+    },
+    {
+        id: 'berry_baron',
+        name: 'Berry Baron',
+        desc: 'Eat 3 types of berries',
+        icon: '🫐',
+        color: '#9C27B0',
+        condition: (p) => {
+            const berries = new Set();
+            p.consumedList.forEach(item => {
+                const name = item.name.toLowerCase();
+                if (name.includes('berry') || name === 'strawberry' || name === 'blueberry' || name === 'raspberry' || name === 'blackberry') {
+                    berries.add(normalizeFruitName(item.name));
+                }
+            });
+            return berries.size >= 3;
+        }
+    },
+    {
+        id: 'tropical',
+        name: 'Island Hopper',
+        desc: 'Eat Mango, Pineapple, & Coconut',
+        icon: '🏝️',
+        color: '#FDB813',
+        condition: (p) => {
+            const tropicals = new Set();
+            const targets = ['Mango', 'Pineapple', 'Coconut', 'Papaya', 'Dragon Fruit', 'Kiwi'];
+            p.consumedList.forEach(item => {
+                const name = normalizeFruitName(item.name);
+                if (targets.includes(name)) tropicals.add(name);
+            });
+            return tropicals.size >= 3;
+        }
+    }
 ];
 
 export const getFruitImage = (fruitName) => {
@@ -204,10 +274,6 @@ export const formatFruitName = normalizeFruitName;
 
 // ---------------------------------------------------------
 // INTELLIGENT SHELF LIFE DATABASE (Days)
-// ---------------------------------------------------------
-// ---------------------------------------------------------
-// INTELLIGENT SHELF LIFE DATABASE (Days)
-// Structure: Default (Counter) | Fridge | Freezer (Optional)
 // ---------------------------------------------------------
 const SHELF_LIFE_DB = {
     'apple': { default: 7, fridge: 28, pantry: 7 },

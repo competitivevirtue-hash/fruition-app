@@ -4,6 +4,16 @@ import './styles/index.css'
 import App from './App.jsx'
 import { FruitProvider } from './context/FruitContext.jsx'
 import { AuthProvider } from './context/AuthContext.jsx'
+import { defineCustomElements as jeepSqlite } from 'jeep-sqlite/loader';
+import { Capacitor } from '@capacitor/core';
+import { loadModel } from './services/mlService'; // [NEW] Preload ML
+
+// Initialize ML Model (fires in background)
+loadModel();
+
+if (Capacitor.getPlatform() === 'web') {
+  jeepSqlite(window);
+}
 
 class ErrorBoundary extends Component {
   constructor(props) {

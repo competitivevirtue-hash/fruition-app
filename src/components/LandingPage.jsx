@@ -24,7 +24,7 @@ const LandingPage = () => {
             <nav className="landing-nav">
                 <div className="nav-logo">
                     <Logo size={32} />
-                    <span className="brand-name">Fruition</span>
+                    <span className="brand-name">Fruitcyclopedia</span>
                 </div>
                 <div className="nav-links">
                     {currentUser ? (
@@ -79,7 +79,7 @@ const LandingPage = () => {
             {/* Features Grid */}
             <section className="features-section">
                 <div className="section-header">
-                    <h2>Why Fruition?</h2>
+                    <h2>Why Fruitcyclopedia?</h2>
                 </div>
 
                 <div className="feature-grid">
@@ -106,9 +106,9 @@ const LandingPage = () => {
                 <div className="footer-content">
                     <div className="footer-logo">
                         <Logo size={24} />
-                        <span>Fruition</span>
+                        <span>Fruitcyclopedia</span>
                     </div>
-                    <p className="copyright">© 2025 Fruition. All rights reserved. Designed for Health & Happiness.</p>
+                    <p className="copyright">© 2025 Fruitcyclopedia. All rights reserved. Designed for Health & Happiness.</p>
                     <div className="footer-links" style={{ display: 'flex', gap: '20px', fontSize: '0.85rem' }}>
                         <button onClick={() => navigate('/privacy')} style={{ background: 'none', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer', textDecoration: 'underline' }}>Privacy Policy</button>
                         <button onClick={() => navigate('/terms')} style={{ background: 'none', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer', textDecoration: 'underline' }}>Terms of Service</button>

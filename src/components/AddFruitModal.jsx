@@ -4,7 +4,10 @@ import { X, Plus, Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lu
 import { useFruit } from '../context/FruitContext.jsx';
 import { getFruitImage, normalizeFruitName } from '../utils/fruitUtils';
 import { fetchFruitNutrition, searchFruits } from '../utils/usdaApi';
+import { captureFruitPhoto } from '../utils/cameraUtils'; // [NEW] Camera Util
+import { identifyFruit } from '../services/mlService'; // [NEW] ML Service
 import { translations } from '../utils/translations';
+import { Camera, Sparkles } from 'lucide-react'; // [NEW] Icon
 import './BioModal.css'; // Reuse styles
 
 const AddFruitModal = ({ isOpen, onClose, initialDate, initialFruitName, fruitToEdit }) => {
@@ -33,6 +36,9 @@ const AddFruitModal = ({ isOpen, onClose, initialDate, initialFruitName, fruitTo
     // Price is entered as TOTAL price for the batch
     const [price, setPrice] = useState('');
     const [expiryOverride, setExpiryOverride] = useState('');
+    const [localImage, setLocalImage] = useState(null); // [NEW] Local image state
+    const [nutritionData, setNutritionData] = useState(null); // [NEW] Smart Data
+    const [prediction, setPrediction] = useState(null); // [NEW] ML Prediction
 
     // Reset or Prefill form
     React.useEffect(() => {
@@ -51,6 +57,7 @@ const AddFruitModal = ({ isOpen, onClose, initialDate, initialFruitName, fruitTo
                 setPrice(totalEstimated > 0 ? totalEstimated.toFixed(2) : '');
 
                 setExpiryOverride(fruitToEdit.expiryDate || '');
+                setLocalImage(fruitToEdit.image || null); // [NEW] Set image if editing
                 setBoughtToday(false); // Assume edit is historic unless changed
                 setCurrentMonth(new Date());
             } else {
@@ -67,14 +74,62 @@ const AddFruitModal = ({ isOpen, onClose, initialDate, initialFruitName, fruitTo
                 });
                 setPrice('');
                 setExpiryOverride('');
+                setLocalImage(null); // [NEW] Reset image
                 setCurrentMonth(dateToUse);
                 setBoughtToday(isDateToday);
             }
+            setPrediction(null); // Reset prediction
             setShowCalendar(false);
             setUnitDropdownOpen(false);
             setSuggestions([]);
         }
     }, [isOpen, initialDate, initialFruitName, fruitToEdit]);
+
+    // [NEW] Intelligent Eye: Analyze Image when set
+    React.useEffect(() => {
+        if (localImage && !fruitToEdit) {
+            const img = new Image();
+            img.onload = async () => {
+                const results = await identifyFruit(img);
+                if (results && results.length > 0) {
+                    const top = results[0];
+                    console.log("ML Prediction:", top);
+                    // Standardize: MobileNet returns "Granny Smith", we want "Apple"
+                    // Simple heuristic: if confidence > 10% (MobileNet is finicky)
+                    if (top.probability > 0.1) {
+                        // Clean up name (remove commas, take first word if appropriate?)
+                        // MobileNet classes are often "Granny Smith" or "banana"
+                        let name = top.className.split(',')[0];
+                        setPrediction({ name: name, confidence: Math.round(top.probability * 100) });
+                    }
+                }
+            };
+            img.src = localImage;
+        } else {
+            setPrediction(null);
+        }
+    }, [localImage]);
+
+    // [NEW] Smart Portion Logic: Fetch nutrition when name changes
+    React.useEffect(() => {
+        const fetchSmartData = async () => {
+            if (formData.name && formData.name.length > 2) {
+                const data = await fetchFruitNutrition(formData.name);
+                setNutritionData(data);
+
+                // Auto-select first portion on new entry
+                if (data && data.portions && data.portions.length > 0 && !fruitToEdit && !isOpen) {
+                    // Note: !isOpen check prevents overwriting if user is just typing? 
+                    // Actually better to just set it if unit is default 'Pieces'
+                    if (formData.unit === 'Pieces') {
+                        setFormData(prev => ({ ...prev, unit: data.portions[0].description }));
+                    }
+                }
+            }
+        };
+        const timeout = setTimeout(fetchSmartData, 600);
+        return () => clearTimeout(timeout);
+    }, [formData.name]);
 
     // Get language from localStorage (simple approach for now, ideally via Context)
     const language = localStorage.getItem('language') || 'en';
@@ -132,10 +187,11 @@ const AddFruitModal = ({ isOpen, onClose, initialDate, initialFruitName, fruitTo
                 const newFruit = {
                     ...fruitData,
                     image: 'https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?auto=format&fit=crop&q=80&w=500',
-                    calories: nutrition?.calories ? parseInt(nutrition.calories) : 95,
+                    calories: 95, // Will be overwritten by calc below
                     fruitcyclopedia: {
                         vitaminC: nutrition?.vitaminC || 'Unknown',
                         fiber: nutrition?.fiber || 'Unknown',
+                        potassium: nutrition?.potassium || 'Unknown', // [NEW] Display Potassium
                         antioxidants: 'Unknown'
                     },
                     nutritionalInfo: nutrition,
@@ -146,6 +202,29 @@ const AddFruitModal = ({ isOpen, onClose, initialDate, initialFruitName, fruitTo
                         ? Math.ceil((new Date(expiryOverride) - new Date()) / (1000 * 60 * 60 * 24))
                         : 7
                 };
+
+                if (localImage) {
+                    newFruit.image = localImage;
+                }
+
+                // [NEW] Recalculate Calories based on Smart Portion
+                // Because we set 'calories' to static 95 above, we overwrite it here.
+                if (nutritionData) {
+                    const portion = nutritionData.portions?.find(p => p.description === formData.unit);
+                    const calsPer100 = nutritionData.rawNutrients?.calories || 52;
+                    const amount = parseFloat(formData.quantity) || 1;
+
+                    if (portion) {
+                        newFruit.calories = Math.round((portion.gramWeight / 100) * calsPer100 * amount);
+                    } else if (formData.unit === 'Pieces') {
+                        newFruit.calories = Math.round((150 / 100) * calsPer100 * amount); // Assumed medium
+                    } else {
+                        // Fallback for 'Grams' or other units if added later
+                        // For now just use raw
+                        newFruit.calories = Math.round(calsPer100 * amount);
+                    }
+                }
+
                 await addFruit(newFruit);
             }
 
@@ -382,6 +461,86 @@ const AddFruitModal = ({ isOpen, onClose, initialDate, initialFruitName, fruitTo
                                 )}
                             </div>
 
+                            {/* [NEW] CAMERA & IMAGE PREVIEW */}
+                            <div className="form-group">
+                                <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>Photo</label>
+                                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                                    <button
+                                        type="button"
+                                        onClick={async () => {
+                                            const photo = await captureFruitPhoto();
+                                            if (photo) setLocalImage(photo);
+                                        }}
+                                        style={{
+                                            padding: '12px',
+                                            background: 'rgba(255, 255, 255, 0.1)',
+                                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                                            borderRadius: '8px',
+                                            color: '#fff',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.5rem'
+                                        }}
+                                    >
+                                        <Camera size={20} />
+                                        Take Photo
+                                    </button>
+
+                                    {localImage && (
+                                        <div style={{ position: 'relative', width: '60px', height: '60px' }}>
+                                            <img
+                                                src={localImage}
+                                                alt="Preview"
+                                                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px', border: '1px solid white' }}
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setLocalImage(null)}
+                                                style={{
+                                                    position: 'absolute', top: -5, right: -5,
+                                                    background: 'red', borderRadius: '50%', border: 'none',
+                                                    color: 'white', width: '20px', height: '20px',
+                                                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px'
+                                                }}
+                                            >
+                                                X
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {/* [NEW] CONFIDENCE CHIP */}
+                                    {prediction && !formData.name && (
+                                        <motion.button
+                                            initial={{ scale: 0.8, opacity: 0 }}
+                                            animate={{ scale: 1, opacity: 1 }}
+                                            type="button"
+                                            onClick={() => {
+                                                setFormData({ ...formData, name: prediction.name });
+                                                setPrediction(null); // Hide after accept
+                                            }}
+                                            style={{
+                                                padding: '8px 12px',
+                                                background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+                                                border: '1px solid rgba(255,255,255,0.3)',
+                                                borderRadius: '20px',
+                                                color: '#fff',
+                                                fontSize: '0.85rem',
+                                                fontWeight: 600,
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '6px',
+                                                boxShadow: '0 4px 15px rgba(168, 85, 247, 0.4)'
+                                            }}
+                                        >
+                                            <Sparkles size={14} fill="white" />
+                                            It looks like {prediction.confidence > 80 ? 'a' : 'maybe'} {prediction.name}?
+                                        </motion.button>
+                                    )}
+                                </div>
+                            </div>
+
                             {/* EXPIRE OVERRIDE - NEW FEATURE */}
                             <div className="form-group">
                                 <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>Expires On (Optional)</label>
@@ -508,7 +667,7 @@ const AddFruitModal = ({ isOpen, onClose, initialDate, initialFruitName, fruitTo
                                                     backdropFilter: 'blur(20px)',
                                                     padding: '6px'
                                                 }}>
-                                                    {['Pieces', 'Bags', 'Cartons', 'lbs', 'kg'].map(option => (
+                                                    {(nutritionData?.portions?.map(p => p.description) || []).concat(['Pieces', 'Bags', 'Cartons', 'lbs', 'kg']).map(option => (
                                                         <div
                                                             key={option}
                                                             onClick={() => {

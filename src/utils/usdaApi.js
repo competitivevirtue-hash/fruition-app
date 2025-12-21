@@ -1,9 +1,26 @@
+import fruitData from '../data/fruitData.json';
+
 const API_KEY = '0Cn8p19TOGv4cmnb0k2wXmPPDvFBsG6puZ7BKwCA';
 const BASE_URL = 'https://api.nal.usda.gov/fdc/v1/foods/search';
 
 export const fetchFruitNutrition = async (fruitName) => {
     if (!fruitName) return null;
 
+    // [NEW] 1. Check Local Cache (Instant & Offline)
+    const lowerName = fruitName.toLowerCase().trim();
+    if (fruitData[lowerName]) {
+        console.log(`Checking local data for ${lowerName}... Found!`);
+        return fruitData[lowerName];
+    } else {
+        // Fallback for partial matches (optional)
+        const partialMatch = Object.keys(fruitData).find(k => lowerName.includes(k));
+        if (partialMatch) {
+            console.log(`Checking local data for ${lowerName}... Found partial: ${partialMatch}`);
+            return fruitData[partialMatch];
+        }
+    }
+
+    // 2. Fallback to API (Network)
     try {
         const query = `${fruitName} raw`; // Append 'raw' for better matches
         const url = `${BASE_URL}?api_key=${API_KEY}&query=${encodeURIComponent(query)}&dataType=Foundation,SR Legacy&pageSize=1`;
@@ -31,7 +48,8 @@ export const fetchFruitNutrition = async (fruitName) => {
         return {
             calories: getNutrientVal(1008), // Energy
             vitaminC: getNutrientVal(1162), // Vitamin C
-            fiber: getNutrientVal(1079)    // Fiber
+            fiber: getNutrientVal(1079),   // Fiber
+            potassium: getNutrientVal(1092) // Potassium [NEW]
         };
 
     } catch (error) {

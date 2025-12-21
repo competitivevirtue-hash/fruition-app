@@ -347,6 +347,77 @@ export function AuthProvider({ children }) {
         return () => clearInterval(interval);
     }, [currentUser]);
 
+    // -------------------------------------------------------------------------
+    // MONETIZATION LOGIC (Premium Membership)
+    // -------------------------------------------------------------------------
+    async function upgradeSubscription(planType) {
+        if (!currentUser) throw new Error("Must be logged in");
+
+        const now = new Date();
+        const renewsAt = new Date();
+
+        // Calculate renewal date based on plan
+        if (planType === 'annual') {
+            renewsAt.setFullYear(renewsAt.getFullYear() + 1);
+        } else {
+            renewsAt.setMonth(renewsAt.getMonth() + 1);
+        }
+
+        const subscriptionData = {
+            status: 'premium',
+            plan: planType, // 'monthly' or 'annual'
+            startedAt: now.toISOString(),
+            renewsAt: renewsAt.toISOString(),
+            isActive: true
+        };
+
+        const userRef = doc(db, 'users', currentUser.uid);
+
+        try {
+            await updateDoc(userRef, { subscription: subscriptionData });
+
+            // Update local state
+            setUserProfile(prev => ({ ...prev, subscription: subscriptionData }));
+
+            await secureLog(`Subscription Upgrade: ${planType}`, { uid: currentUser.uid }, LOG_LEVELS.INFO, EVENT_TYPES.PAYMENT);
+            return true;
+        } catch (error) {
+            console.error("Upgrade failed:", error);
+            throw error;
+        }
+    }
+
+    async function cancelSubscription() {
+        if (!currentUser) return;
+
+        // In a real app, this might set cancelAtPeriodEnd = true
+        // For this requirements ("premium ends... changed back to free"), we revert immediately or just mark status
+        // We will set status to 'free' immediately for simplicity per requirements
+
+        const subscriptionData = {
+            status: 'free',
+            plan: null,
+            renewsAt: null,
+            isActive: false,
+            cancelledAt: new Date().toISOString()
+        };
+
+        const userRef = doc(db, 'users', currentUser.uid);
+
+        try {
+            await updateDoc(userRef, { subscription: subscriptionData });
+
+            // Update local state
+            setUserProfile(prev => ({ ...prev, subscription: subscriptionData }));
+
+            await secureLog(`Subscription Cancelled`, { uid: currentUser.uid }, LOG_LEVELS.INFO, EVENT_TYPES.PAYMENT);
+            return true;
+        } catch (error) {
+            console.error("Cancellation failed:", error);
+            throw error;
+        }
+    }
+
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             setCurrentUser(user);
@@ -403,6 +474,8 @@ export function AuthProvider({ children }) {
         createHousehold,
         joinHousehold,
         leaveHousehold,
+        upgradeSubscription,
+        cancelSubscription,
         isAdmin: userProfile?.role === 'admin' || currentUser?.email === 'paytonpleasanti@gmail.com'
     };
 

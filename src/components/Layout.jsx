@@ -4,11 +4,16 @@ import InfoModal from './InfoModal';
 import Sidebar from './Sidebar';
 import Logo from './Logo';
 import NotificationBell from './NotificationBell';
+import ExpiredItemsModal from './ExpiredItemsModal';
+import { useNotifications } from '../context/NotificationContext';
 import './Layout.css';
 
 const Layout = ({ children, currentView, onNavigate, onOpenSettings, onOpenProfile }) => {
     const [infoModal, setInfoModal] = useState({ isOpen: false, title: '', message: '' });
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+    // Notification Context for Global Modals
+    const { expiredModalOpen, setExpiredModalOpen } = useNotifications();
 
     return (
         <div className="app-layout">
@@ -46,6 +51,11 @@ const Layout = ({ children, currentView, onNavigate, onOpenSettings, onOpenProfi
                 onClose={() => setInfoModal({ ...infoModal, isOpen: false })}
                 title={infoModal.title}
                 message={infoModal.message}
+            />
+
+            <ExpiredItemsModal
+                isOpen={expiredModalOpen}
+                onClose={() => setExpiredModalOpen(false)}
             />
         </div>
     );

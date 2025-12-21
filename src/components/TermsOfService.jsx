@@ -22,7 +22,7 @@ const TermsOfService = () => {
                     cursor: 'pointer', marginBottom: '2rem', fontSize: '1rem', fontWeight: 600
                 }}
             >
-                <ArrowLeft size={20} /> Back to Fruition
+                <ArrowLeft size={20} /> Back to Fruitcyclopedia
             </button>
 
             <h1 className="text-gradient" style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>Terms of Service</h1>
@@ -33,7 +33,7 @@ const TermsOfService = () => {
                     <FileText className="text-primary" size={24} /> 1. Agreement to Terms
                 </h2>
                 <p>
-                    By accessing or using Fruition, you agree to be bound by these Terms of Service. If you disagree with any part of the terms, you may not access the service.
+                    By accessing or using Fruitcyclopedia, you agree to be bound by these Terms of Service. If you disagree with any part of the terms, you may not access the service.
                 </p>
             </section>
 
@@ -44,7 +44,7 @@ const TermsOfService = () => {
                 <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
                     <h3 style={{ fontSize: '1.1rem', marginBottom: '0.5rem', color: '#f59e0b' }}>Not Medical Advice</h3>
                     <p style={{ color: 'var(--color-text)' }}>
-                        Fruition is designed for informational and educational purposes only. The app tracks fruit consumption and provides general nutritional data.
+                        Fruitcyclopedia is designed for informational and educational purposes only. The app tracks fruit consumption and provides general nutritional data.
                         <strong>It is not a substitute for professional medical advice, diagnosis, or treatment.</strong>
                         Always seek the advice of your physician or other qualified health provider with any questions you may have regarding a medical condition.
                     </p>

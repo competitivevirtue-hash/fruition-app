@@ -11,7 +11,8 @@ const NotificationBell = () => {
         markAsRead,
         clearAll,
         requestPermission,
-        permission
+        permission,
+        setExpiredModalOpen
     } = useNotifications();
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
@@ -31,6 +32,14 @@ const NotificationBell = () => {
         setIsOpen(!isOpen);
         if (permission === 'default') {
             requestPermission();
+        }
+    };
+
+    const handleNotificationClick = (note) => {
+        markAsRead(note.id);
+        if (note.actionLink === 'OPEN_EXPIRED_MODAL') {
+            setExpiredModalOpen(true);
+            setIsOpen(false); // Close dropdown
         }
     };
 
@@ -134,7 +143,7 @@ const NotificationBell = () => {
                                 notifications.map(note => (
                                     <div
                                         key={note.id}
-                                        onClick={() => markAsRead(note.id)}
+                                        onClick={() => handleNotificationClick(note)}
                                         style={{
                                             padding: '1rem',
                                             marginBottom: '0.5rem',

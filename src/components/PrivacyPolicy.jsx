@@ -22,7 +22,7 @@ const PrivacyPolicy = () => {
                     cursor: 'pointer', marginBottom: '2rem', fontSize: '1rem', fontWeight: 600
                 }}
             >
-                <ArrowLeft size={20} /> Back to Fruition
+                <ArrowLeft size={20} /> Back to Fruitcyclopedia
             </button>
 
             <h1 className="text-gradient" style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>Privacy Policy</h1>
@@ -33,8 +33,8 @@ const PrivacyPolicy = () => {
                     <Shield className="text-primary" size={24} /> 1. Introduction
                 </h2>
                 <p>
-                    Fruition ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how your personal information is collected, used, and disclosed by Fruition.
-                    This Privacy Policy applies to our website, and its associated subdomains (collectively, our "Service") alongside our application, Fruition.
+                    Fruitcyclopedia ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how your personal information is collected, used, and disclosed by Fruitcyclopedia.
+                    This Privacy Policy applies to our website, and its associated subdomains (collectively, our "Service") alongside our application, Fruitcyclopedia.
                 </p>
             </section>
 

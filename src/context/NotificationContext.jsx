@@ -9,6 +9,9 @@ export const NotificationProvider = ({ children }) => {
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
 
+    // Modal State
+    const [expiredModalOpen, setExpiredModalOpen] = useState(false);
+
     // Default Preferences: Notify 2 days before
     const [preferences, setPreferences] = useState({
         notifyDaysBefore: [2], // Default
@@ -149,7 +152,12 @@ export const NotificationProvider = ({ children }) => {
 
             // Summary notification if multiple items
             if (expiredCount > 0) {
-                addNotification("Pantry Alert 🚨", `${expiredCount} items have expired. Check your inventory.`, 'danger');
+                addNotification(
+                    "Pantry Alert 🚨",
+                    `${expiredCount} items have expired. Check your inventory.`,
+                    'danger',
+                    'OPEN_EXPIRED_MODAL' // Action Link
+                );
             }
 
             localStorage.setItem('last_expiry_check', now.toISOString());
@@ -172,7 +180,9 @@ export const NotificationProvider = ({ children }) => {
             clearAll,
             addNotification, // Exposed for manual triggers (e.g. Welcome message)
             preferences,
-            setPreferences
+            setPreferences,
+            expiredModalOpen,
+            setExpiredModalOpen
         }}>
             {children}
         </NotificationContext.Provider>

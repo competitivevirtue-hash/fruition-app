@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, LayoutDashboard, Apple, Calendar, BookOpen, User, LogOut, MoreHorizontal, ChevronLeft, ChevronRight, TrendingUp } from 'lucide-react';
+import { X, LayoutDashboard, Apple, Calendar, BookOpen, User, LogOut, MoreHorizontal, ChevronLeft, ChevronRight, TrendingUp, Flame } from 'lucide-react'; // [NEW] Flame
 import Logo from './Logo';
 import './Layout.css';
 
+import { useStreak } from '../context/StreakContext'; // [NEW]
+
 const Sidebar = ({ isOpen, onClose, currentView, onNavigate, onOpenSettings, onOpenProfile }) => {
+    const { streak, showAnimation } = useStreak(); // [NEW]
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     const [isCollapsed, setIsCollapsed] = useState(() => {
         return localStorage.getItem('sidebarCollapsed') === 'true';
@@ -38,13 +41,37 @@ const Sidebar = ({ isOpen, onClose, currentView, onNavigate, onOpenSettings, onO
                     onClick={() => { onNavigate('dashboard'); if (isMobile) onClose(); }}
                 >
                     <Logo size={isCollapsed ? 36 : 32} />
-                    {!isCollapsed && <span className="text-gradient" style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>Fruition</span>}
+                    {!isCollapsed && <span className="text-gradient" style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>Fruitcyclopedia</span>}
                 </div>
                 {isMobile && (
                     <button onClick={onClose} className="icon-btn" style={{ padding: '8px' }}>
                         <X size={24} />
                     </button>
                 )}
+            </div>
+
+            {/* [NEW] STREAK INDICATOR */}
+            <div style={{ padding: isCollapsed ? '0' : '0 1rem', marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}>
+                <div style={{
+                    background: 'rgba(255, 69, 0, 0.1)',
+                    border: '1px solid rgba(255, 69, 0, 0.2)',
+                    borderRadius: '20px',
+                    padding: isCollapsed ? '6px' : '6px 12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    color: '#FF4500',
+                    fontWeight: 'bold',
+                    cursor: 'default',
+                    whiteSpace: 'nowrap',
+                    transition: 'all 0.3s'
+                }}
+                    title="Current Streak"
+                >
+                    <Flame size={18} fill={streak > 0 ? "#FF4500" : "none"} className={showAnimation ? "pulse-animation" : ""} />
+                    {!isCollapsed && <span style={{ fontSize: '0.9rem' }}>{streak} Day Streak</span>}
+                    {isCollapsed && <span style={{ fontSize: '0.8rem' }}>{streak}</span>}
+                </div>
             </div>
 
             <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1 }}>

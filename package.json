@@ -1,5 +1,5 @@
 {
-  "name": "fruition-app",
+  "name": "fruitcyclopedia",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -10,14 +10,21 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@capacitor-community/sqlite": "^7.0.2",
     "@capacitor-firebase/authentication": "^7.4.0",
     "@capacitor/android": "^7.4.4",
+    "@capacitor/camera": "^7.0.3",
     "@capacitor/cli": "^7.4.4",
     "@capacitor/core": "^7.4.4",
+    "@capacitor/filesystem": "^7.1.6",
     "@capacitor/ios": "^7.4.4",
+    "@google/model-viewer": "^4.1.0",
+    "@tensorflow-models/mobilenet": "^2.1.1",
+    "@tensorflow/tfjs": "^4.22.0",
     "firebase": "^11.10.0",
     "framer-motion": "^12.23.24",
     "html2canvas": "^1.4.1",
+    "jeep-sqlite": "^2.8.0",
     "jspdf": "^3.0.4",
     "lucide-react": "^0.554.0",
     "react": "^19.2.0",

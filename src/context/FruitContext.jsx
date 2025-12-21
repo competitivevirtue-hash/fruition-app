@@ -5,6 +5,7 @@ import { useAuth } from './AuthContext.jsx';
 
 import { getShelfLife } from '../utils/fruitUtils';
 import { broadcastConsumption, broadcastWaste } from '../utils/feedUtils';
+import { initDB, saveFruitsToCache, getFruitsFromCache } from '../services/db'; // [NEW] SQLite Service
 
 const FruitContext = createContext();
 
@@ -37,6 +38,20 @@ export const FruitProvider = ({ children }) => {
     // NUCLEAR REWRITE: Strict Real-Time Sync Logic (Household Aware)
     // -------------------------------------------------------------------------
     useEffect(() => {
+        // [NEW] 1. Initialize DB & Load Cache immediately for "Offline Mode" 
+        const loadCache = async () => {
+            const db = await initDB();
+            if (db) {
+                const cachedFruits = await getFruitsFromCache();
+                if (cachedFruits.length > 0) {
+                    console.log("sqlite: Loaded cached fruits", cachedFruits.length);
+                    dispatch({ type: 'SET_FRUITS', payload: cachedFruits });
+                    setLoading(false); // Show content immediately
+                }
+            }
+        };
+        loadCache();
+
         let unsubscribe = () => { };
 
         if (currentUser) {
@@ -103,6 +118,10 @@ export const FruitProvider = ({ children }) => {
                     });
 
                     dispatch({ type: 'SET_FRUITS', payload: fruitsData });
+
+                    // [NEW] Cache updates to SQLite
+                    saveFruitsToCache(fruitsData);
+
                     setLoading(false);
                 }, (error) => {
                     console.error("❌ Firestore Listener Error:", error);

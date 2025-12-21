@@ -19,6 +19,7 @@ const AdminDashboard = () => {
     const [loading, setLoading] = useState(false);
     const [stats, setStats] = useState({
         totalUsers: 0,
+        premiumUsers: 0,
         founders: 1,
         status: 'Operational',
         globalItemsConsumed: 0,
@@ -35,6 +36,7 @@ const AdminDashboard = () => {
     const [showSafeMode, setShowSafeMode] = useState(true); // Prevents accidental self-bans
     const [logs, setLogs] = useState([]);
     const [activeTab, setActiveTab] = useState('users'); // 'users' or 'logs'
+    const [filter, setFilter] = useState('all'); // 'all', 'premium', 'banned', 'admin'
 
     // Security Check
     useEffect(() => {
@@ -60,6 +62,10 @@ const AdminDashboard = () => {
                 const activeQ = query(usersColl, where('lastActive', '>', yesterday));
                 const activeSnap = await getCountFromServer(activeQ);
 
+                // Premium Count
+                const premiumQ = query(usersColl, where('subscription.status', '==', 'premium'));
+                const premiumSnap = await getCountFromServer(premiumQ);
+
                 // --- GLOBAL METRICS (The "Metrics Across The Board") ---
                 // Query all 'consumed' subcollections across the entire database
                 // Note: This requires a Firestore Index on 'consumed' collection group if using filters,
@@ -81,6 +87,7 @@ const AdminDashboard = () => {
                 setStats(prev => ({
                     ...prev,
                     totalUsers: snapshot.data().count,
+                    premiumUsers: premiumSnap.data().count,
                     bannedUsers: bannedSnap.data().count,
                     activeToday: activeSnap.data().count,
                     globalItemsConsumed: totalItems,
@@ -122,12 +129,21 @@ const AdminDashboard = () => {
             const usersRef = collection(db, 'users');
 
             if (searchTerm.trim()) {
-                // Email Search
+                // Email Search (overrides filter usually, or combines?)
+                // For simplicity, search overrides filter, keeping it simple
                 q = query(usersRef, where('email', '>=', searchTerm), where('email', '<=', searchTerm + '\uf8ff'), limit(5));
             } else {
-                // If empty search, verify if we want to show Banned users only
-                // This is a "List Banned" feature
-                q = query(usersRef, where('disabled', '==', true), limit(20));
+                // Filter Logic
+                if (filter === 'premium') {
+                    q = query(usersRef, where('subscription.status', '==', 'premium'), limit(20));
+                } else if (filter === 'banned') {
+                    q = query(usersRef, where('disabled', '==', true), limit(20));
+                } else if (filter === 'admin') {
+                    q = query(usersRef, where('role', '==', 'admin'), limit(20));
+                } else {
+                    // Default / All: Show recent signups or just limit 20
+                    q = query(usersRef, orderBy('createdAt', 'desc'), limit(20));
+                }
             }
 
             const snaps = await getDocs(q);
@@ -306,6 +322,13 @@ const AdminDashboard = () => {
                         <Users size={20} color="#3b82f6" />
                     </div>
                     <div className="text-glow" style={{ fontSize: '2.5rem', fontWeight: '800', color: 'var(--color-text)' }}>{stats.totalUsers.toLocaleString()}</div>
+                </div>
+                <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: '20px', background: 'var(--glass-background)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                        <span style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Premium Users</span>
+                        <Crown size={20} color="#fbbf24" />
+                    </div>
+                    <div className="text-glow" style={{ fontSize: '2.5rem', fontWeight: '800', color: '#fbbf24', textShadow: '0 0 20px rgba(251, 191, 36, 0.4)' }}>{stats.premiumUsers || 0}</div>
                 </div>
                 <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: '20px', background: 'var(--glass-background)', border: '1px solid rgba(255,255,255,0.05)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
@@ -491,6 +514,20 @@ const AdminDashboard = () => {
                                     }}
                                 />
                             </div>
+                            <select
+                                value={filter}
+                                onChange={(e) => setFilter(e.target.value)}
+                                style={{
+                                    padding: '16px', borderRadius: '16px', background: 'var(--glass-background)',
+                                    border: '1px solid rgba(255,255,255,0.1)', color: 'var(--color-text)',
+                                    outline: 'none', cursor: 'pointer', fontWeight: 'bold'
+                                }}
+                            >
+                                <option value="all">All Users</option>
+                                <option value="premium">Premium Only</option>
+                                <option value="banned">Banned Only</option>
+                                <option value="admin">Administrators</option>
+                            </select>
                             <button
                                 type="submit"
                                 disabled={loading}

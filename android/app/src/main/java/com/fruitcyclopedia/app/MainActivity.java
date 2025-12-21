@@ -1,4 +1,4 @@
-package com.fruition.app;
+package com.fruitcyclopedia.app;
 
 import com.getcapacitor.BridgeActivity;
 

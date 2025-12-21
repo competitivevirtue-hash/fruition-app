@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Microscope, Lightbulb, Activity, Tag, CheckCircle, Utensils } from 'lucide-react';
+import { X, Microscope, Lightbulb, Activity, Tag, CheckCircle, Utensils, Box } from 'lucide-react';
 import { getFruitImage } from '../utils/fruitUtils';
 import { fetchFruitNutrition } from '../utils/usdaApi';
 
 import { getVarieties } from '../utils/varietiesUtils';
 import { fruits as mockFruits } from '../data/mockData';
 import { Plus } from 'lucide-react';
+import ModelViewer from './ModelViewer'; // [NEW]
 import './BioModal.css';
 
 const FruitcyclopediaModal = ({ fruit, onClose, onAddToBasket }) => {
     const [nutrition, setNutrition] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [viewMode, setViewMode] = useState('2d'); // '2d' or '3d'
 
     const varieties = React.useMemo(() => getVarieties(fruit?.name), [fruit]);
 
@@ -61,7 +63,34 @@ const FruitcyclopediaModal = ({ fruit, onClose, onAddToBasket }) => {
                     </button>
 
                     <div className="modal-header">
-                        <img src={getFruitImage(displayFruit.name)} alt={displayFruit.name} className="modal-image" />
+                        <div style={{ position: 'relative', width: '100%' }}>
+                            {viewMode === '3d' ? (
+                                <ModelViewer
+                                    src="/models/apple.glb" // Hardcoded placeholder for demo
+                                    poster={getFruitImage(displayFruit.name)}
+                                    alt={`3D model of ${displayFruit.name}`}
+                                />
+                            ) : (
+                                <img src={getFruitImage(displayFruit.name)} alt={displayFruit.name} className="modal-image" />
+                            )}
+
+                            {/* 3D Toggle Button */}
+                            <button
+                                onClick={() => setViewMode(viewMode === '2d' ? '3d' : '2d')}
+                                style={{
+                                    position: 'absolute', bottom: '16px', right: '16px',
+                                    background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',
+                                    border: '1px solid rgba(255,255,255,0.2)', borderRadius: '20px',
+                                    padding: '8px 12px', color: '#fff', fontSize: '0.8rem',
+                                    display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer',
+                                    zIndex: 10
+                                }}
+                            >
+                                <Box size={16} />
+                                {viewMode === '2d' ? 'View 3D' : 'View 2D'}
+                            </button>
+                        </div>
+
                         <div className="modal-title-container">
                             <h2 className="modal-title text-gradient">{displayFruit.name}</h2>
                             {displayFruit.scientificName && <span className="scientific-name">{displayFruit.scientificName}</span>}
